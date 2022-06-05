@@ -7,6 +7,9 @@ import type {
   IMetricsComponent,
 } from "@well-known-components/interfaces"
 import { metricDeclarations } from "./metrics"
+import { IContentStorageComponent } from "@dcl/catalyst-storage"
+import { MockedStorage } from "@dcl/catalyst-storage/dist/MockedStorage"
+import { HTTPProvider } from "eth-connect"
 
 export type GlobalContext = {
   components: BaseComponents
@@ -19,6 +22,8 @@ export type BaseComponents = {
   server: IHttpServerComponent<GlobalContext>
   fetch: IFetchComponent
   metrics: IMetricsComponent<keyof typeof metricDeclarations>
+  ethereumProvider: HTTPProvider
+  storage: IContentStorageComponent
 }
 
 // components used in runtime
@@ -30,6 +35,7 @@ export type AppComponents = BaseComponents & {
 export type TestComponents = BaseComponents & {
   // A fetch component that only hits the test server
   localFetch: IFetchComponent
+  storage: MockedStorage
 }
 
 // this type simplifies the typings of http handlers
