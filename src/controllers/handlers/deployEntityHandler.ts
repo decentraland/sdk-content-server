@@ -4,6 +4,7 @@ import { FormDataContext } from "../../logic/multipart"
 import { HandlerContextWithPath } from "../../types"
 import { Authenticator } from "@dcl/crypto"
 import { hashV1 } from "@dcl/hashing"
+import { bufferToStream } from "@dcl/catalyst-storage/dist/content-item"
 import { Readable } from "stream"
 import { fetchAllowedAddresses } from "../../logic/fetch-allowed-addresses"
 import { stringToUtf8Bytes } from "eth-connect"
@@ -128,14 +129,15 @@ export async function deployEntity(
   // store all files
   for (const file of entity.content!) {
     if (!allContentHashesInStorage.get(file.hash)) {
-      await ctx.components.storage.storeStream(file.hash, Readable.from(ctx.formData.files[file.hash].value))
+      console.dir(bufferToStream(ctx.formData.files[file.hash].value))
+      await ctx.components.storage.storeStream(file.hash, bufferToStream(ctx.formData.files[file.hash].value))
     }
   }
 
-  await ctx.components.storage.storeStream(entityId, Readable.from(Buffer.from(stringToUtf8Bytes(entityRaw))))
-  await ctx.components.storage.storeStream(entityId + ".auth", Readable.from(Buffer.from(JSON.stringify(authChain))))
+  await ctx.components.storage.storeStream(entityId, bufferToStream(stringToUtf8Bytes(entityRaw)))
+  await ctx.components.storage.storeStream(entityId + ".auth", bufferToStream(stringToUtf8Bytes(JSON.stringify(authChain))))
 
-  const urn = `urn:decentraland:entity:${entityId}?baseUrl=https://static-pe.decentraland.io/`
+  const urn = `urn:decentraland:entity:${entityId}?baseUrl=https://sdk-content-server.decentraland.org/ipfs/`
 
   return {
     status: 200,
