@@ -53,9 +53,9 @@ export async function availableContentHandler(
 
   return {
     status: 200,
-    body: results.map(($) => ({
-      cid: $,
-      available: false,
+    body: results.map(([cid, available]) => ({
+      cid,
+      available,
     })),
   }
 }
