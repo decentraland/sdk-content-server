@@ -50,6 +50,7 @@ export function extractAuthChain(ctx: FormDataContext): AuthChain {
 export async function deployEntity(
   ctx: FormDataContext & HandlerContextWithPath<"ethereumProvider" | "storage" | "fetch" | "logs", "/content/entities">
 ): Promise<IHttpServerComponent.IResponse> {
+  const logger = ctx.components.logs.getLogger("deploy")
   try {
     const entityId = requireString(ctx.formData.fields.entityId.value)
     const authChain = extractAuthChain(ctx)
@@ -112,7 +113,7 @@ export async function deployEntity(
       }
     }
 
-    const allContentHashes = entity.content!.map(($) => $.hash)
+    const allContentHashes = Array.from(new Set(entity.content!.map(($) => $.hash)))
     const allContentHashesInStorage = await ctx.components.storage.existMultiple(allContentHashes)
 
     // then ensure that all missing files are uploaded
@@ -130,10 +131,14 @@ export async function deployEntity(
     // store all files
     for (const file of entity.content!) {
       if (!allContentHashesInStorage.get(file.hash)) {
+        const filename = entity.content!.find(($) => $.hash == file.hash)
+        logger.info(`Storing file`, { cid: file.hash, filename: filename?.file || "unknown" })
         await ctx.components.storage.storeStream(file.hash, bufferToStream(ctx.formData.files[file.hash].value))
+        allContentHashesInStorage.set(file.hash, true)
       }
     }
 
+    logger.info(`Storing entity`, { cid: entityId })
     await ctx.components.storage.storeStream(entityId, bufferToStream(stringToUtf8Bytes(entityRaw)))
     await ctx.components.storage.storeStream(
       entityId + ".auth",
@@ -162,7 +167,7 @@ export async function deployEntity(
     }
   } catch (err: any) {
     console.error(err)
-    ctx.components.logs.getLogger("deploy").error(err)
+    logger.error(err)
     throw err
   }
 }
