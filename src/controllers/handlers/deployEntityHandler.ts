@@ -159,7 +159,7 @@ export async function deployEntity(
             urn
           )}`,
           ``,
-          `Preview as Space: https://play.decentraland.zone/?kernel-branch=chore%2Fspaces&SPACE=${encodeURIComponent(
+          `Preview as Space: https://play.decentraland.zone/?SPACE=${encodeURIComponent(
             urn
           )}`,
         ].join("\n"),

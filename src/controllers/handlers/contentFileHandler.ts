@@ -5,7 +5,7 @@ import { ContentItem } from "@dcl/catalyst-storage"
 
 function contentItemHeaders(content: ContentItem, hashId: string) {
   const ret: Record<string, string> = {
-    "content-type": "application/octet-stream",
+    "Content-Type": "application/octet-stream",
     ETag: JSON.stringify(hashId), // by spec, the ETag must be a double-quoted string
     "Access-Control-Expose-Headers": "ETag",
     "Cache-Control": "public,max-age=31536000,s-maxage=31536000,immutable",

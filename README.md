@@ -1,54 +1,57 @@
-# template-server
+# SDK Content Server
 
-## Architecture
+This is the simplest content server API needed to deploy and retrieve scenes.
 
-Extension of "ports and adapters architecture", also known as "hexagonal architecture".
+It uses the `@dcl/catalyst-storage` library to store the deployments directly on the disk or S3.
 
-With this architecture, code is organized into several layers: logic, controllers, adapters, and ports.
+# Deploying entities to this server
 
-## Application lifecycle
+The deployments accepted by this server only run one validation: Allowlist of signer address.
 
-1. **Start application lifecycle** - Handled by [src/index.ts](src/index.ts) in only one line of code: `Lifecycle.run({ main, initComponents })`
-2. **Create components** - Handled by [src/components.ts](src/components.ts) in the function `initComponents`
-3. **Wire application & start components** - Handled by [src/service.ts](src/service.ts) in the funciton `main`.
-   1. First wire HTTP routes and other events with [controllers](#src/controllers)
-   2. Then call to `startComponents()` to initialize the components (i.e. http-listener)
+The validations are performed against https://config.decentraland.org/allowed-pushers-px.json, this can be easily configured in the file [src/logic/fetch-allowed-addresses.ts](src/logic/fetch-allowed-addresses.ts)
 
-The same lifecycle is also valid for tests: [test/components.ts](test/components.ts)
+Besides the schema and hashing validity of the entities, no other ownership or file size checks are performed.
 
-## Namespaces
+## Deploying using the CLI tool
 
-### src/logic
+Once your signer address is added to the allow-list, then you should be able to deploy to this server. The recommended approach is by the CLI tool. You must specify the URL of this server as `--content-server` to make it work, like this:
 
-Deals with pure business logic and shouldn't have side-effects or throw exceptions.
+```bash
+# cd into your scene
+cd my-scene
 
-### src/controllers
-
-The "glue" between all the other layers, orchestrating calls between pure business logic, adapters, and ports.
-
-Controllers always receive an hydrated context containing components and parameters to call the business logic e.g:
-
-```ts
-// handler for /ping
-export async function pingHandler(context: {
-  url: URL // parameter added by http-server
-  components: AppComponents // components of the app, part of the global context
-}) {
-  components.metrics.increment("test_ping_counter")
-  return { status: 200 }
-}
+# then deploy
+export DCL_PRIVATE_KEY=0x....
+dcl deploy --target-content https://sdk-content-server.decentraland.org
 ```
 
-### src/adapters
+Upon successful deployment, the latest version of the CLI should print some helpful information about how to preview the scene along with the addressable URN of the deployment.
 
-The layer that converts external data representations into internal ones, and vice-versa. Acts as buffer to protect the service from changes in the outside world; when a data representation changes, you only need to change how the adapters deal with it.
+### Addressable URN
 
-### src/ports
+A deployment in Decentraland can live anywhere as long as it complies with the format. To consistently identify deployments and their location in servers, the concept of addressable URN is introduced.
 
-The layer that communicates with the outside world, such as http, kafka, and the database.
+Let a valid deployment URN be:
+```
+urn:decentraland:entity:bafkreihpipyhrt75xyquwrynrtjadwb373xfosy7a5rhlh5vogjajye3im
+```
 
-### src/components.ts
+That deployment will be downloaded from the configured content server by default. But for testing purposes, the content servers are not always the most straight forward way to test. To help the operations, a baseUrl query parameter can be added: `?baseUrl=https://sdk-content-server.decentraland.org/ipfs/` yielding a full URN like this:
 
-We use the components abstraction to organize our ports (e.g. HTTP client, database client, redis client) and any other logic that needs to track mutable state or encode dependencies between stateful components. For every environment (e.g. test, e2e, prod, staging...) we have a different version of our component systems, enabling us to easily inject mocks or different implementations for different contexts.
+```
+urn:decentraland:entity:bafkreihpipyhrt75xyquwrynrtjadwb373xfosy7a5rhlh5vogjajye3im?baseUrl=https://sdk-content-server.decentraland.org/ipfs/
+```
 
-We make components available to incoming http and kafka handlers. For instance, the http-server handlers have access to things like the database or HTTP components, and pass them down to the controller level for general use.
+Now the explorers know where to look for when downloading that entity, bypassing the content servers. Or more precisely, pointing to this server which acts as content server.
+
+# Using Addressable URNs
+
+As of the moment of writing this document, there are two ways to use the addressable URNs: as global portable experiences and as single scene instead of loading the genesis city.
+
+The first one is used to generate experiences for all users, like the pride event calendar. It can be tested by adding the `GLOBAL_PX=<urn>` query parameter to the explorer. Like this https://play.decentraland.zone/?GLOBAL_PX=urn:decentraland:entity:bafkreihpipyhrt75xyquwrynrtjadwb373xfosy7a5rhlh5vogjajye3im?baseUrl=https://sdk-content-server.decentraland.org/ipfs/
+
+The second use case is to load a singular scene instead of the full genesis city. Likewise, it is done via adding a `SPACE=<urn>` query parameter, like this: https://play.decentraland.zone/?SPACE=urn:decentraland:entity:bafkreihpipyhrt75xyquwrynrtjadwb373xfosy7a5rhlh5vogjajye3im?baseUrl=https://sdk-content-server.decentraland.org/ipfs/
+
+Portable experiences and single scenes (spaces) can be used at the same time to generate dynamic experiences.
+
+These flows are designed to improve the user experience in the areas like onboarding experiences, helper calendars for events, and for debugging purposes among others.
