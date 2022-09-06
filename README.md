@@ -22,7 +22,7 @@ cd my-scene
 
 # then deploy
 export DCL_PRIVATE_KEY=0x....
-dcl deploy --target-content https://sdk-content-server.decentraland.org
+dcl deploy --target-content https://worlds-content-server.decentraland.org
 ```
 
 Upon successful deployment, the latest version of the CLI should print some helpful information about how to preview the scene along with the addressable URN of the deployment.
@@ -36,10 +36,10 @@ Let a valid deployment URN be:
 urn:decentraland:entity:bafkreihpipyhrt75xyquwrynrtjadwb373xfosy7a5rhlh5vogjajye3im
 ```
 
-That deployment will be downloaded from the configured content server by default. But for testing purposes, the content servers are not always the most straight forward way to test. To help the operations, a baseUrl query parameter can be added: `?baseUrl=https://sdk-content-server.decentraland.org/ipfs/` yielding a full URN like this:
+That deployment will be downloaded from the configured content server by default. But for testing purposes, the content servers are not always the most straight forward way to test. To help the operations, a baseUrl query parameter can be added: `?baseUrl=https://worlds-content-server.decentraland.org/ipfs/` yielding a full URN like this:
 
 ```
-urn:decentraland:entity:bafkreihpipyhrt75xyquwrynrtjadwb373xfosy7a5rhlh5vogjajye3im?baseUrl=https://sdk-content-server.decentraland.org/ipfs/
+urn:decentraland:entity:bafkreihpipyhrt75xyquwrynrtjadwb373xfosy7a5rhlh5vogjajye3im?baseUrl=https://worlds-content-server.decentraland.org/ipfs/
 ```
 
 Now the explorers know where to look for when downloading that entity, bypassing the content servers. Or more precisely, pointing to this server which acts as content server.
@@ -48,9 +48,9 @@ Now the explorers know where to look for when downloading that entity, bypassing
 
 As of the moment of writing this document, there are two ways to use the addressable URNs: as global portable experiences and as single scene instead of loading the genesis city.
 
-The first one is used to generate experiences for all users, like the pride event calendar. It can be tested by adding the `GLOBAL_PX=<urn>` query parameter to the explorer. Like this https://play.decentraland.zone/?GLOBAL_PX=urn:decentraland:entity:bafkreihpipyhrt75xyquwrynrtjadwb373xfosy7a5rhlh5vogjajye3im?baseUrl=https://sdk-content-server.decentraland.org/ipfs/
+The first one is used to generate experiences for all users, like the pride event calendar. It can be tested by adding the `GLOBAL_PX=<urn>` query parameter to the explorer. Like this https://play.decentraland.zone/?GLOBAL_PX=urn:decentraland:entity:bafkreihpipyhrt75xyquwrynrtjadwb373xfosy7a5rhlh5vogjajye3im?baseUrl=https://worlds-content-server.decentraland.org/ipfs/
 
-The second use case is to load a singular scene instead of the full genesis city. Likewise, it is done via adding a `SPACE=<urn>` query parameter, like this: https://play.decentraland.zone/?SPACE=urn:decentraland:entity:bafkreihpipyhrt75xyquwrynrtjadwb373xfosy7a5rhlh5vogjajye3im?baseUrl=https://sdk-content-server.decentraland.org/ipfs/
+The second use case is to load a singular scene instead of the full genesis city. Likewise, it is done via adding a `SPACE=<urn>` query parameter, like this: https://play.decentraland.zone/?SPACE=urn:decentraland:entity:bafkreihpipyhrt75xyquwrynrtjadwb373xfosy7a5rhlh5vogjajye3im?baseUrl=https://worlds-content-server.decentraland.org/ipfs/
 
 Portable experiences and single scenes (spaces) can be used at the same time to generate dynamic experiences.
 

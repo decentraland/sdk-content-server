@@ -5,9 +5,8 @@ import { HandlerContextWithPath } from "../../types"
 import { Authenticator } from "@dcl/crypto"
 import { hashV1 } from "@dcl/hashing"
 import { bufferToStream } from "@dcl/catalyst-storage/dist/content-item"
-import { Readable } from "stream"
-import { fetchAllowedAddresses } from "../../logic/fetch-allowed-addresses"
 import { stringToUtf8Bytes } from "eth-connect"
+import { checkPermissionForAddress } from "../../logic/check-permissions";
 
 export function requireString(val: string): string {
   if (typeof val != "string") throw new Error("A string was expected")
@@ -48,7 +47,7 @@ export function extractAuthChain(ctx: FormDataContext): AuthChain {
 }
 
 export async function deployEntity(
-  ctx: FormDataContext & HandlerContextWithPath<"ethereumProvider" | "storage" | "fetch" | "logs", "/content/entities">
+  ctx: FormDataContext & HandlerContextWithPath<"ethereumProvider" | "storage" | "fetch" | "logs" | "marketplaceSubGraph", "/content/entities">
 ): Promise<IHttpServerComponent.IResponse> {
   const logger = ctx.components.logs.getLogger("deploy")
   try {
@@ -75,9 +74,9 @@ export async function deployEntity(
     }
 
     // validate that the signer has permissions to deploy this scene
-    const addressesWithPermission = await fetchAllowedAddresses(ctx.components)
-    if (!addressesWithPermission.some(($) => $.toLowerCase() == signer.toLowerCase())) {
-      return Error400("Deployment failed: Your wallet has no permission to publish to this server.")
+    const hasPermission = await checkPermissionForAddress(ctx.components, signer)
+    if (!hasPermission) {
+      return Error400(`Deployment failed: Your wallet has no permission to publish to this server because it doesn't own a Decentraland NAME.`)
     }
 
     // then validate that the entityId is valid
@@ -145,7 +144,7 @@ export async function deployEntity(
       bufferToStream(stringToUtf8Bytes(JSON.stringify(authChain)))
     )
 
-    const urn = `urn:decentraland:entity:${entityId}?baseUrl=https://sdk-content-server.decentraland.org/ipfs/`
+    const urn = `urn:decentraland:entity:${entityId}?baseUrl=https://worlds-content-server.decentraland.org/ipfs/`
 
     return {
       status: 200,

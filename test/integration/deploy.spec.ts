@@ -3,7 +3,6 @@ import { ContentClient } from "dcl-catalyst-client"
 import { EntityType } from "@dcl/schemas"
 import { Authenticator } from "@dcl/crypto"
 import { createUnsafeIdentity } from "@dcl/crypto/dist/crypto"
-import { REMOTE_CONFIG_URL } from "../../src/logic/fetch-allowed-addresses"
 import { Response } from "node-fetch"
 import Sinon from "sinon"
 import { stringToUtf8Bytes } from "eth-connect"
@@ -53,11 +52,16 @@ test("deployment works", function ({ components, stubComponents }) {
     // Sign entity id
     const identity = await getIdentity()
 
-    fetch.fetch.withArgs(REMOTE_CONFIG_URL).resolves(
-      new Response(
-        JSON.stringify({
-          allowedSigners: { "beta-tester": identity.realAccount.address },
-        })
+    fetch.fetch.withArgs(await config.requireString("MARKETPLACE_SUBGRAPH_URL")).resolves(
+      new Response(JSON.stringify({
+            data: {
+              names: [
+                {
+                  name: 'my-super-name'
+                }
+              ]
+            }
+          })
       )
     )
 
@@ -66,7 +70,7 @@ test("deployment works", function ({ components, stubComponents }) {
     // Deploy entity
     await contentClient.deployEntity({ files, entityId, authChain })
 
-    Sinon.assert.calledOnceWithExactly(fetch.fetch, REMOTE_CONFIG_URL)
+    Sinon.assert.calledOnceWithMatch(fetch.fetch, await config.requireString("MARKETPLACE_SUBGRAPH_URL"))
 
     expect(await storage.exist(fileHash)).toEqual(true)
     expect(await storage.exist(entityId)).toEqual(true)
@@ -75,6 +79,7 @@ test("deployment works", function ({ components, stubComponents }) {
 test("deployment doesnt work because of random key", function ({ components, stubComponents }) {
   it("fails deployment with ephemeral random key", async () => {
     const { config } = components
+    const { fetch } = stubComponents
 
     const contentClient = new ContentClient({
       contentUrl: `http://${await config.requireString("HTTP_SERVER_HOST")}:${await config.requireNumber(
@@ -97,9 +102,18 @@ test("deployment doesnt work because of random key", function ({ components, stu
 
     const authChain = Authenticator.signPayload(identity.authChain, entityId)
 
+    fetch.fetch.withArgs(await config.requireString("MARKETPLACE_SUBGRAPH_URL")).resolves(
+        new Response(JSON.stringify({
+              data: {
+                names: []
+              }
+            })
+        )
+    )
+
     // Deploy entity
     await expect(() => contentClient.deployEntity({ files, entityId, authChain })).rejects.toThrowError(
-      "Deployment failed: Your wallet has no permission to publish to this server."
+      "Deployment failed: Your wallet has no permission to publish to this server because it doesn't own a Decentraland NAME."
     )
   })
 })
