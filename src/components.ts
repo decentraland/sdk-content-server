@@ -23,7 +23,9 @@ export async function initComponents(): Promise<AppComponents> {
   const statusChecks = await createStatusCheckComponent({ server, config })
   const fetch = await createFetchComponent()
   const metrics = await createMetricsComponent({ ...metricDeclarations, ...theGraphMetricDeclarations}, { server, config })
-  const ethereumProvider = new HTTPProvider("https://rpc.decentraland.org/mainnet?project=worlds-content-server", fetch)
+
+  const rpcUrl = (await config.requireString("RPC_URL"))
+  const ethereumProvider = new HTTPProvider(rpcUrl, fetch)
 
   const storageFolder = (await config.getString("STORAGE_FOLDER")) || "contents"
 
