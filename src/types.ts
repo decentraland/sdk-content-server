@@ -10,6 +10,7 @@ import { metricDeclarations } from "./metrics"
 import { IContentStorageComponent } from "@dcl/catalyst-storage"
 import { MockedStorage } from "@dcl/catalyst-storage/dist/MockedStorage"
 import { HTTPProvider } from "eth-connect"
+import { ISubgraphComponent } from "@well-known-components/thegraph-component";
 
 export type GlobalContext = {
   components: BaseComponents
@@ -24,6 +25,7 @@ export type BaseComponents = {
   metrics: IMetricsComponent<keyof typeof metricDeclarations>
   ethereumProvider: HTTPProvider
   storage: IContentStorageComponent
+  marketplaceSubGraph: ISubgraphComponent
 }
 
 // components used in runtime
