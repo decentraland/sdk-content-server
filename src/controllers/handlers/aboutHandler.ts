@@ -27,10 +27,6 @@ export async function aboutHandler({
       healthy: true,
       publicUrl: lambdasURL,
     },
-    bff: {
-      healthy: true,
-      publicUrl: "/",
-    },
     comms: {
       healthy: true,
       protocol: "v3",
