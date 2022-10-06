@@ -8,16 +8,16 @@ export async function aboutHandler({
   const fixedAdapter = await config.requireString("COMMS_FIXED_ADAPTER")
   const lambdasURL = await config.requireString("LAMBDAS_URL")
   const contentURL = await config.requireString("CONTENT_URL")
-  const scenesURL = await config.requireString("SCENES_URL")
-  const scenesURNS = await config.requireString("SCENE_URNS")
+  const scenesURN = await config.requireString("SCENES_URN")
+  const globalScenesURN = await config.getString("GLOBAL_SCENES_URN")
 
   // TODO: add a proper health check for content and lambdas
   const body: AboutResponse = {
     healthy: true,
     configurations: {
       networkId,
-      scenesUrl: scenesURL,
-      sceneUrns: scenesURNS.split(" "),
+      globalScenesUrn: globalScenesURN ? globalScenesURN.split(" ") : [],
+      scenesUrn: scenesURN.split(" "),
     },
     content: {
       healthy: true,
