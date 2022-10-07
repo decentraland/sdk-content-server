@@ -3,16 +3,17 @@ import { createServerComponent, createStatusCheckComponent } from "@well-known-c
 import { createLogComponent } from "@well-known-components/logger"
 import { createFetchComponent } from "./adapters/fetch"
 import { createMetricsComponent } from "@well-known-components/metrics"
-import { createSubgraphComponent } from "@well-known-components/thegraph-component";
+import { createSubgraphComponent } from "@well-known-components/thegraph-component"
 import { AppComponents, GlobalContext } from "./types"
 import { metricDeclarations } from "./metrics"
-import { metricDeclarations as theGraphMetricDeclarations } from '@well-known-components/thegraph-component'
+import { metricDeclarations as theGraphMetricDeclarations } from "@well-known-components/thegraph-component"
 import { HTTPProvider } from "eth-connect"
 import {
   createAwsS3BasedFileSystemContentStorage,
   createFolderBasedFileSystemContentStorage,
   createFsComponent,
 } from "@dcl/catalyst-storage"
+import { createStatusComponent } from "./adapters/status"
 
 // Initialize all the components of the app
 export async function initComponents(): Promise<AppComponents> {
@@ -22,9 +23,12 @@ export async function initComponents(): Promise<AppComponents> {
   const server = await createServerComponent<GlobalContext>({ config, logs }, { cors: {} })
   const statusChecks = await createStatusCheckComponent({ server, config })
   const fetch = await createFetchComponent()
-  const metrics = await createMetricsComponent({ ...metricDeclarations, ...theGraphMetricDeclarations}, { server, config })
+  const metrics = await createMetricsComponent(
+    { ...metricDeclarations, ...theGraphMetricDeclarations },
+    { server, config }
+  )
 
-  const rpcUrl = (await config.requireString("RPC_URL"))
+  const rpcUrl = await config.requireString("RPC_URL")
   const ethereumProvider = new HTTPProvider(rpcUrl, fetch)
 
   const storageFolder = (await config.getString("STORAGE_FOLDER")) || "contents"
@@ -37,10 +41,9 @@ export async function initComponents(): Promise<AppComponents> {
     : await createFolderBasedFileSystemContentStorage({ fs }, storageFolder)
 
   const subGraphUrl = await config.requireString("MARKETPLACE_SUBGRAPH_URL")
-  const marketplaceSubGraph = await createSubgraphComponent(
-      { config, logs, metrics, fetch },
-      subGraphUrl
-  )
+  const marketplaceSubGraph = await createSubgraphComponent({ config, logs, metrics, fetch }, subGraphUrl)
+
+  const status = await createStatusComponent({ logs, fetch, config })
 
   return {
     config,
@@ -52,5 +55,6 @@ export async function initComponents(): Promise<AppComponents> {
     ethereumProvider,
     storage,
     marketplaceSubGraph,
+    status,
   }
 }
