@@ -6,10 +6,10 @@ import { Authenticator } from "@dcl/crypto"
 import { hashV1 } from "@dcl/hashing"
 import { bufferToStream } from "@dcl/catalyst-storage/dist/content-item"
 import { stringToUtf8Bytes } from "eth-connect"
-import { checkPermissionForAddress } from "../../logic/check-permissions";
+import { fetchNamesOwnedByAddress } from "../../logic/check-permissions";
 
-export function requireString(val: string): string {
-  if (typeof val != "string") throw new Error("A string was expected")
+ export function requireString(val: string): string {
+  if (typeof val !== "string") throw new Error("A string was expected")
   return val
 }
 
@@ -47,7 +47,7 @@ export function extractAuthChain(ctx: FormDataContext): AuthChain {
 }
 
 export async function deployEntity(
-  ctx: FormDataContext & HandlerContextWithPath<"ethereumProvider" | "storage" | "fetch" | "logs" | "marketplaceSubGraph", "/content/entities">
+  ctx: FormDataContext & HandlerContextWithPath<"config" | "ethereumProvider" | "storage" | "fetch" | "logs" | "marketplaceSubGraph", "/content/entities">
 ): Promise<IHttpServerComponent.IResponse> {
   const logger = ctx.components.logs.getLogger("deploy")
   try {
@@ -74,7 +74,8 @@ export async function deployEntity(
     }
 
     // validate that the signer has permissions to deploy this scene
-    const hasPermission = await checkPermissionForAddress(ctx.components, signer)
+    const names = await fetchNamesOwnedByAddress(ctx.components, signer)
+    const hasPermission = names.length > 0
     if (!hasPermission) {
       return Error400(`Deployment failed: Your wallet has no permission to publish to this server because it doesn't own a Decentraland NAME.`)
     }
@@ -99,16 +100,16 @@ export async function deployEntity(
     // then validate all files are part of the entity
     for (const hash in ctx.formData.files) {
       // detect extra file
-      if (!entity.content!.some(($) => $.hash == hash) && hash != entityId) {
+      if (!entity.content!.some(($) => $.hash == hash) && hash !== entityId) {
         return Error400(`Deployment failed: Extra file detected ${hash}`)
       }
       // only new hashes
       if (!IPFSv2.validate(hash)) {
-        return Error400(`Deployment failed: Only CIDv1 are allowed for content files`)
+        return Error400("Deployment failed: Only CIDv1 are allowed for content files")
       }
       // hash the file
-      if ((await hashV1(ctx.formData.files[hash].value)) != hash) {
-        return Error400(`Deployment failed: The hashed file doesn't match the provided content`)
+      if ((await hashV1(ctx.formData.files[hash].value)) !== hash) {
+        return Error400("Deployment failed: The hashed file doesn't match the provided content")
       }
     }
 
@@ -137,14 +138,21 @@ export async function deployEntity(
       }
     }
 
+    // TODO Read already existing entity (if any) and remove all its files (to avoid leaving orphaned files)
+
     logger.info(`Storing entity`, { cid: entityId })
     await ctx.components.storage.storeStream(entityId, bufferToStream(stringToUtf8Bytes(entityRaw)))
     await ctx.components.storage.storeStream(
       entityId + ".auth",
       bufferToStream(stringToUtf8Bytes(JSON.stringify(authChain)))
     )
+    await ctx.components.storage.storeStream(
+      names[0] + ".name",
+      bufferToStream(stringToUtf8Bytes(JSON.stringify({ entityId: entityId })))
+    )
 
-    const urn = `urn:decentraland:entity:${entityId}?baseUrl=https://worlds-content-server.decentraland.org/ipfs/`
+    const baseUrl = new URL("/ipfs", await ctx.components.config.requireString("BASE_URL"))
+    const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}`
 
     return {
       status: 200,

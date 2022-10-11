@@ -5,7 +5,7 @@ type NamesResponse = {
   names: { name: string }[]
 }
 
-export async function checkPermissionForAddress(components: Pick<AppComponents, "marketplaceSubGraph">, ethAddress: EthAddress): Promise<boolean> {
+export async function fetchNamesOwnedByAddress(components: Pick<AppComponents, "marketplaceSubGraph">, ethAddress: EthAddress): Promise<string[]> {
   const result = await components.marketplaceSubGraph.query<NamesResponse>(`
     query FetchNames($ethAddress: String) {
         names: nfts(where: { owner: $ethAddress, category: ens }, first: 1000) {
@@ -17,5 +17,5 @@ export async function checkPermissionForAddress(components: Pick<AppComponents, 
       }
   );
 
-  return result.names.length > 0;
+  return result.names.map(({name}) => name);
 }
