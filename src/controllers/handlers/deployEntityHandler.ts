@@ -147,12 +147,13 @@ export async function deployEntity(
       bufferToStream(stringToUtf8Bytes(JSON.stringify(authChain)))
     )
     await ctx.components.storage.storeStream(
-      names[0] + ".name",
+      names[0].toLowerCase() + ".dcl.eth",
       bufferToStream(stringToUtf8Bytes(JSON.stringify({ entityId: entityId })))
     )
 
-    const baseUrl = new URL("/ipfs", await ctx.components.config.requireString("BASE_URL"))
-    const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}`
+    const baseUrl = `${ctx.url.protocol}//${ctx.url.host}`
+    const worldUrl = `${ctx.url.protocol}//${ctx.url.host}/world/${names[0]}.dcl.eth`
+    const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}/ipfs`
 
     return {
       status: 200,
@@ -168,6 +169,9 @@ export async function deployEntity(
           ``,
           `Preview as Space: https://play.decentraland.zone/?SPACE=${encodeURIComponent(
             urn
+          )}`,
+          `Preview as World: https://play.decentraland.zone/?realm=${encodeURIComponent(
+            worldUrl
           )}`,
         ].join("\n"),
       },

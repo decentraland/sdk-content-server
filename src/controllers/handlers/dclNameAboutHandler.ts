@@ -4,11 +4,12 @@ import { streamToBuffer } from "@dcl/catalyst-storage/dist/content-item";
 
 export async function dclNameAboutHandler({
   params,
+  url,
   components: { config, status, storage },
-}: Pick<HandlerContextWithPath<"config" | "status" | "storage", "/:dcl_name/about">, "components" | "params">) {
+}: Pick<HandlerContextWithPath<"config" | "status" | "storage", "/world/:dcl_name/about">, "components" | "params" | "url">) {
 
   // Retrieve
-  const content = await storage.retrieve(params.dcl_name + ".name")
+  const content = await storage.retrieve(params.dcl_name.toLowerCase()) // name should end with .dcl.eth
   if (!content) {
     return {
       status: 404,
@@ -18,6 +19,8 @@ export async function dclNameAboutHandler({
 
   const buffer = await streamToBuffer(await content?.asStream())
   const { entityId } = JSON.parse(buffer.toString())
+  const baseUrl = `${url.protocol}//${url.host}/ipfs`
+  const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}`
 
   const networkId = await config.requireNumber("NETWORK_ID")
   const fixedAdapter = await config.requireString("COMMS_FIXED_ADAPTER")
@@ -33,7 +36,7 @@ export async function dclNameAboutHandler({
     configurations: {
       networkId,
       globalScenesUrn: globalScenesURN ? globalScenesURN.split(" ") : [],
-      scenesUrn: [`urn:decentraland:entity:${entityId}`],
+      scenesUrn: [ urn ],
       minimap: {
         enabled: true,
       },

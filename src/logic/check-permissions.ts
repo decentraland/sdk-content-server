@@ -8,7 +8,7 @@ type NamesResponse = {
 export async function fetchNamesOwnedByAddress(components: Pick<AppComponents, "marketplaceSubGraph">, ethAddress: EthAddress): Promise<string[]> {
   const result = await components.marketplaceSubGraph.query<NamesResponse>(`
     query FetchNames($ethAddress: String) {
-        names: nfts(where: { owner: $ethAddress, category: ens }, first: 1000) {
+        names: nfts(where: { owner: $ethAddress, category: ens }, orderBy: name, first: 1000) {
           name
         }
      }`,
