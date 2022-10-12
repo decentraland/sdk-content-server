@@ -1,5 +1,9 @@
 import { HandlerContextWithPath } from "../../types"
-import { AboutResponse } from "../../proto/http-endpoints.gen"
+import {
+  AboutResponse,
+  AboutResponse_MinimapConfiguration,
+  AboutResponse_SkyboxConfiguration
+} from "../../proto/http-endpoints.gen"
 import { streamToBuffer } from "@dcl/catalyst-storage/dist/content-item";
 
 export async function dclNameAboutHandler({
@@ -19,6 +23,16 @@ export async function dclNameAboutHandler({
 
   const buffer = await streamToBuffer(await content?.asStream())
   const { entityId } = JSON.parse(buffer.toString())
+
+  const scene = await storage.retrieve(entityId)
+  if (!scene) {
+    return {
+      status: 404,
+      body: `Scene "${entityId}" not deployed in this server.`
+    }
+  }
+  const sceneJson = JSON.parse((await streamToBuffer(await scene?.asStream())).toString())
+
   const baseUrl = `https://${url.host}/ipfs`
   const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}`
 
@@ -31,16 +45,27 @@ export async function dclNameAboutHandler({
   const contentStatus = await status.getContentStatus()
   const lambdasStatus = await status.getLambdasStatus()
 
+  const minimap: AboutResponse_MinimapConfiguration = {
+    enabled: sceneJson.metadata.worldConfiguration?.minimapVisible || false
+  }
+  if (sceneJson.metadata.worldConfiguration?.minimapVisible) {
+    // TODO We may need allow the scene creator to specify these values
+    minimap.dataImage = "https://api.decentraland.org/v1/minimap.png"
+    minimap.estateImage = "https://api.decentraland.org/v1/estatemap.png"
+  }
+
+  const skybox: AboutResponse_SkyboxConfiguration = {
+    fixedHour: sceneJson.metadata.worldConfiguration?.skybox
+  }
+
   const body: AboutResponse = {
     healthy: contentStatus.healthy && lambdasStatus.healthy,
     configurations: {
       networkId,
       globalScenesUrn: globalScenesURN ? globalScenesURN.split(" ") : [],
       scenesUrn: [ urn ],
-      minimap: {
-        enabled: true,
-      },
-      skybox: {},
+      minimap,
+      skybox,
     },
     content: {
       healthy: contentStatus.healthy,
