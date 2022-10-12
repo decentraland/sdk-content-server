@@ -21,7 +21,6 @@ RUN npm ci
 # build the app
 COPY . /app
 RUN make build
-ENV BASE_URL "http://127.0.0.1:3000"
 RUN npm run test
 
 # remove devDependencies, keep only used dependencies

@@ -19,5 +19,3 @@ jobs:
         run: make build
       - name: test
         run: npm run test
-        env:
-          BASE_URL: http://127.0.0.1:3000
