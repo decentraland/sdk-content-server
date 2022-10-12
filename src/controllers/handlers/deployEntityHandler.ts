@@ -151,8 +151,8 @@ export async function deployEntity(
       bufferToStream(stringToUtf8Bytes(JSON.stringify({ entityId: entityId })))
     )
 
-    const baseUrl = `${ctx.url.protocol}//${ctx.url.host}`
-    const worldUrl = `${ctx.url.protocol}//${ctx.url.host}/world/${names[0]}.dcl.eth`
+    const baseUrl = `https://${ctx.url.host}`
+    const worldUrl = `${baseUrl}/world/${names[0]}.dcl.eth`
     const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}/ipfs`
 
     return {

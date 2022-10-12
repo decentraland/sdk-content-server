@@ -19,7 +19,7 @@ export async function dclNameAboutHandler({
 
   const buffer = await streamToBuffer(await content?.asStream())
   const { entityId } = JSON.parse(buffer.toString())
-  const baseUrl = `${url.protocol}//${url.host}/ipfs`
+  const baseUrl = `https://${url.host}/ipfs`
   const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}`
 
   const networkId = await config.requireNumber("NETWORK_ID")
