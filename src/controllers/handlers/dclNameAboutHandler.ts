@@ -66,6 +66,7 @@ export async function dclNameAboutHandler({
       scenesUrn: [ urn ],
       minimap,
       skybox,
+      realmName: params.dcl_name
     },
     content: {
       healthy: contentStatus.healthy,
