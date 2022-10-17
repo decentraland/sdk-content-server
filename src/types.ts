@@ -28,7 +28,10 @@ export type BaseComponents = {
   storage: IContentStorageComponent
   marketplaceSubGraph: ISubgraphComponent
   status: IStatusComponent
+  sns: SnsComponent
 }
+
+export type SnsComponent = { arn?: string }
 
 // components used in runtime
 export type AppComponents = BaseComponents & {

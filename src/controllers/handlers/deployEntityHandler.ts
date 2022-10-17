@@ -7,6 +7,7 @@ import { hashV1 } from "@dcl/hashing"
 import { bufferToStream } from "@dcl/catalyst-storage/dist/content-item"
 import { stringToUtf8Bytes } from "eth-connect"
 import { fetchNamesOwnedByAddress } from "../../logic/check-permissions";
+import { SNS } from "aws-sdk"
 
  export function requireString(val: string): string {
   if (typeof val !== "string") throw new Error("A string was expected")
@@ -47,9 +48,11 @@ export function extractAuthChain(ctx: FormDataContext): AuthChain {
 }
 
 export async function deployEntity(
-  ctx: FormDataContext & HandlerContextWithPath<"config" | "ethereumProvider" | "storage" | "fetch" | "logs" | "marketplaceSubGraph", "/content/entities">
+  ctx: FormDataContext & HandlerContextWithPath<"config" | "ethereumProvider" | "storage" | "fetch" | "logs" | "marketplaceSubGraph" | "sns", "/content/entities">
 ): Promise<IHttpServerComponent.IResponse> {
   const logger = ctx.components.logs.getLogger("deploy")
+  const sns = new SNS()
+
   try {
     const entityId = requireString(ctx.formData.fields.entityId.value)
     const authChain = extractAuthChain(ctx)
@@ -152,6 +155,21 @@ export async function deployEntity(
     )
 
     const baseUrl = `https://${ctx.url.host}`
+
+    // send deployment notification over sns
+    if (ctx.components.sns.arn) {
+      const receipt = await sns
+          .publish({
+            TopicArn: ctx.components.sns.arn,
+            Message: JSON.stringify({ entity, baseUrls: baseUrl }),
+          })
+          .promise()
+      logger.info("notification sent", {
+        MessageId: receipt.MessageId as any,
+        SequenceNumber: receipt.SequenceNumber as any,
+      })
+    }
+
     const worldUrl = `${baseUrl}/world/${names[0]}.dcl.eth`
     const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}/ipfs`
 
