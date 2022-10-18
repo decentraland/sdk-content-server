@@ -8,6 +8,7 @@ import { bufferToStream } from "@dcl/catalyst-storage/dist/content-item"
 import { stringToUtf8Bytes } from "eth-connect"
 import { fetchNamesOwnedByAddress } from "../../logic/check-permissions";
 import { SNS } from "aws-sdk"
+import { DeploymentToSqs } from "@dcl/schemas/dist/misc/deployments-to-sqs";
 
  export function requireString(val: string): string {
   if (typeof val !== "string") throw new Error("A string was expected")
@@ -158,10 +159,17 @@ export async function deployEntity(
 
     // send deployment notification over sns
     if (ctx.components.sns.arn) {
+      const deploymentToSqs: DeploymentToSqs = {
+        entity: {
+          entityId: entityId,
+          authChain
+        },
+        contentServerUrls: [baseUrl]
+      }
       const receipt = await sns
           .publish({
             TopicArn: ctx.components.sns.arn,
-            Message: JSON.stringify({ entity, baseUrls: baseUrl }),
+            Message: JSON.stringify(deploymentToSqs),
           })
           .promise()
       logger.info("notification sent", {
