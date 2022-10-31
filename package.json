@@ -17,7 +17,7 @@
   "dependencies": {
     "@dcl/catalyst-storage": "^1.0.0-20220605041137.commit-d80daa1",
     "@dcl/content-validator": "^1.5.1",
-    "@dcl/crypto": "^3.0.0",
+    "@dcl/crypto": "^3.2.2",
     "@dcl/hashing": "^1.1.0",
     "@dcl/schemas": "^4.14.1",
     "@types/busboy": "^1.5.0",
