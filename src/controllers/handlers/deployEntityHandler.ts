@@ -49,7 +49,7 @@ export function extractAuthChain(ctx: FormDataContext): AuthChain {
 }
 
 export async function deployEntity(
-  ctx: FormDataContext & HandlerContextWithPath<"config" | "ethereumProvider" | "storage" | "fetch" | "logs" | "marketplaceSubGraph" | "sns", "/content/entities">
+  ctx: FormDataContext & HandlerContextWithPath<"config" | "ethereumProvider" | "storage" | "logs" | "marketplaceSubGraph" | "sns", "/entities">
 ): Promise<IHttpServerComponent.IResponse> {
   const logger = ctx.components.logs.getLogger("deploy")
   const sns = new SNS()
@@ -155,7 +155,8 @@ export async function deployEntity(
       bufferToStream(stringToUtf8Bytes(JSON.stringify({ entityId: entityId })))
     )
 
-    const baseUrl = `https://${ctx.url.host}`
+    const baseUrl = (await ctx.components.config.getString("HTTP_BASE_URL")
+        || `https://${ctx.url.host}`).toString()
 
     // send deployment notification over sns
     if (ctx.components.sns.arn) {
