@@ -5,6 +5,7 @@ import {
   AboutResponse_SkyboxConfiguration
 } from "../../proto/http-endpoints.gen"
 import { streamToBuffer } from "@dcl/catalyst-storage/dist/content-item";
+import { buildUrl } from "../../logic/url-generation";
 
 export async function dclNameAboutHandler({
   params,
@@ -33,10 +34,9 @@ export async function dclNameAboutHandler({
   }
   const sceneJson = JSON.parse((await streamToBuffer(await scene?.asStream())).toString())
 
-  const baseUrl = ((await config.getString("HTTP_BASE_URL")
-      || `https://${url.host}`).toString())
+  const ipfsUrl = buildUrl(url, '/world', `/ipfs`)
 
-  const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}/ipfs`
+  const urn = `urn:decentraland:entity:${entityId}?baseUrl=${ipfsUrl}`
 
   const networkId = await config.requireNumber("NETWORK_ID")
   const fixedAdapter = await config.requireString("COMMS_FIXED_ADAPTER")
