@@ -19,7 +19,7 @@
     "@dcl/content-validator": "^4.0.17",
     "@dcl/crypto": "^3.2.2",
     "@dcl/hashing": "^1.1.1",
-    "@dcl/schemas": "^5.27.0",
+    "@dcl/schemas": "^5.28.0",
     "@types/busboy": "^1.5.0",
     "@well-known-components/env-config-provider": "^1.1.1",
     "@well-known-components/http-server": "^1.1.1",
