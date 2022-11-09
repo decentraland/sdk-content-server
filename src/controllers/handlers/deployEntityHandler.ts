@@ -9,7 +9,6 @@ import { stringToUtf8Bytes } from "eth-connect"
 import { fetchNamesOwnedByAddress } from "../../logic/check-permissions";
 import { SNS } from "aws-sdk"
 import { DeploymentToSqs } from "@dcl/schemas/dist/misc/deployments-to-sqs";
-import { buildUrl } from "../../logic/url-generation";
 
  export function requireString(val: string): string {
   if (typeof val !== "string") throw new Error("A string was expected")
@@ -156,7 +155,8 @@ export async function deployEntity(
       bufferToStream(stringToUtf8Bytes(JSON.stringify({ entityId: entityId })))
     )
 
-    const baseUrl = buildUrl(ctx.url, '/entities', ``)
+    const baseUrl = (await ctx.components.config.getString("HTTP_BASE_URL")
+        || `https://${ctx.url.host}`).toString()
 
     // send deployment notification over sns
     if (ctx.components.sns.arn) {
@@ -179,9 +179,8 @@ export async function deployEntity(
       })
     }
 
-    const worldUrl = buildUrl(ctx.url, '/entities', `/world/${names[0]}.dcl.eth`)
-    const ipfsUrl = buildUrl(ctx.url, '/entities', '/ipfs')
-    const urn = `urn:decentraland:entity:${entityId}?baseUrl=${ipfsUrl}`
+    const worldUrl = `${baseUrl}/world/${names[0]}.dcl.eth`
+    const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}/ipfs`
 
     return {
       status: 200,

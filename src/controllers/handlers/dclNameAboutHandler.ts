@@ -5,14 +5,13 @@ import {
   AboutResponse_SkyboxConfiguration
 } from "../../proto/http-endpoints.gen"
 import { streamToBuffer } from "@dcl/catalyst-storage/dist/content-item";
-import { buildUrl } from "../../logic/url-generation";
 
 export async function dclNameAboutHandler({
   params,
   url,
   components: { config, status, storage },
 }: Pick<HandlerContextWithPath<"config" | "status" | "storage", "/world/:dcl_name/about">, "components" | "params" | "url">) {
-
+  console.log({ url })
   // Retrieve
   const content = await storage.retrieve(params.dcl_name.toLowerCase()) // name should end with .dcl.eth
   if (!content) {
@@ -34,9 +33,10 @@ export async function dclNameAboutHandler({
   }
   const sceneJson = JSON.parse((await streamToBuffer(await scene?.asStream())).toString())
 
-  const ipfsUrl = buildUrl(url, '/world', `/ipfs`)
+  const baseUrl = ((await config.getString("HTTP_BASE_URL")
+      || `https://${url.host}`).toString())
 
-  const urn = `urn:decentraland:entity:${entityId}?baseUrl=${ipfsUrl}`
+  const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}/ipfs`
 
   const networkId = await config.requireNumber("NETWORK_ID")
   const fixedAdapter = await config.requireString("COMMS_FIXED_ADAPTER")
