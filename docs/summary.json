@@ -1,0 +1,13 @@
+{
+    "contributor": [
+        {
+            "name": "Worlds",
+            "children": [
+                {
+                    "name": "About",
+                    "slug": "/contributor/worlds/about"
+                }
+            ]
+        }
+    ]
+}
