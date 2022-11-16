@@ -27,7 +27,7 @@ async function getIdentity() {
 test("deployment works", function ({ components, stubComponents }) {
   it("creates an entity and deploys it", async () => {
     const { config, storage } = components
-    const { fetch } = stubComponents
+    const { fetch, metrics } = stubComponents
 
     const contentClient = new ContentClient({
       contentUrl: `http://${await config.requireString("HTTP_SERVER_HOST")}:${await config.requireNumber(
@@ -74,8 +74,11 @@ test("deployment works", function ({ components, stubComponents }) {
 
     expect(await storage.exist(fileHash)).toEqual(true)
     expect(await storage.exist(entityId)).toEqual(true)
+
+    Sinon.assert.calledWithMatch(metrics.increment, "world_deployments_counter")
   })
 })
+
 test("deployment doesnt work because of random key", function ({ components, stubComponents }) {
   it("fails deployment with ephemeral random key", async () => {
     const { config } = components

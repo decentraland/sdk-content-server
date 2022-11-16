@@ -2,10 +2,10 @@ import { IMetricsComponent } from "@well-known-components/interfaces"
 import { validateMetricsDeclaration } from "@well-known-components/metrics"
 
 export const metricDeclarations = {
-  test_ping_counter: {
-    help: "Count calls to ping",
+  world_deployments_counter: {
+    help: "Count world deployments",
     type: IMetricsComponent.CounterType,
-    labelNames: ["pathname"],
+    labelNames: [],
   },
 }
 
