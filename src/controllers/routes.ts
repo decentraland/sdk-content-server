@@ -5,6 +5,7 @@ import { aboutHandler } from "./handlers/aboutHandler"
 import { availableContentHandler, getContentFile, headContentFile } from "./handlers/contentFileHandler"
 import { deployEntity } from "./handlers/deployEntityHandler"
 import { dclNameAboutHandler } from "./handlers/dclNameAboutHandler";
+import { statsHandler } from "./handlers/statsHandler";
 
 // We return the entire router because it will be easier to test than a whole server
 export async function setupRouter(globalContext: GlobalContext): Promise<Router<GlobalContext>> {
@@ -24,6 +25,8 @@ export async function setupRouter(globalContext: GlobalContext): Promise<Router<
   // legacy?
   router.head("/contents/:hashId", headContentFile)
   router.get("/contents/:hashId", getContentFile)
+
+  router.get('/stats', statsHandler)
 
   return router
 }
