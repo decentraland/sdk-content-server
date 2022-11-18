@@ -20,4 +20,14 @@ export async function main(program: Lifecycle.EntryPointParameters<AppComponents
 
   // start ports: db, listeners, synchronizations, etc
   await startComponents()
+
+  // Migrate old name pointers to new one
+  for await (const key of await components.storage.allFileIds()) {
+    if (!key.startsWith('name-') && key.endsWith('.dcl.eth')) {
+      console.log(`Renaming "${key}" to "name-${key}"`)
+      const fileContent = await components.storage.retrieve(key)
+      await components.storage.storeStream(`name-${key}`, await fileContent?.asStream()!)
+      await components.storage.delete([key])
+    }
+  }
 }

@@ -11,9 +11,8 @@ export async function dclNameAboutHandler({
   url,
   components: { config, status, storage },
 }: Pick<HandlerContextWithPath<"config" | "status" | "storage", "/world/:dcl_name/about">, "components" | "params" | "url">) {
-  console.log({ url })
   // Retrieve
-  const content = await storage.retrieve(params.dcl_name.toLowerCase()) // name should end with .dcl.eth
+  const content = await storage.retrieve(`name-${params.dcl_name.toLowerCase()}`) // name should end with .dcl.eth
   if (!content) {
     return {
       status: 404,

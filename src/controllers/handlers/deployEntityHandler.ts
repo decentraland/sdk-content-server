@@ -151,7 +151,7 @@ export async function deployEntity(
       bufferToStream(stringToUtf8Bytes(JSON.stringify(authChain)))
     )
     await ctx.components.storage.storeStream(
-      names[0].toLowerCase() + ".dcl.eth",
+        `name-${names[0].toLowerCase()}.dcl.eth`,
       bufferToStream(stringToUtf8Bytes(JSON.stringify({ entityId: entityId })))
     )
 
