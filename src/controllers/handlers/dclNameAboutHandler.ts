@@ -35,7 +35,7 @@ export async function dclNameAboutHandler({
   const baseUrl = ((await config.getString("HTTP_BASE_URL")
       || `https://${url.host}`).toString())
 
-  const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}/ipfs`
+  const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}/ipfs/`
 
   const networkId = await config.requireNumber("NETWORK_ID")
   const fixedAdapter = await config.requireString("COMMS_FIXED_ADAPTER")
