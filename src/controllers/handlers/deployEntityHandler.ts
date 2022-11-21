@@ -77,8 +77,8 @@ export async function deployEntity(
       return Error400("Deployment failed: Invalid auth chain " + validAuthChain.message)
     }
 
-    // validate that the signer has permissions to deploy this scene
-    const names = await fetchNamesOwnedByAddress(ctx.components, signer)
+    // validate that the signer has permissions to deploy this scene. the graph only responds to lower cased addressess
+    const names = await fetchNamesOwnedByAddress(ctx.components, signer.toLowerCase())
     const hasPermission = names.length > 0
     if (!hasPermission) {
       return Error400(`Deployment failed: Your wallet has no permission to publish to this server because it doesn't own a Decentraland NAME.`)
