@@ -7,6 +7,7 @@ import { main } from '../src/service'
 import { TestComponents } from '../src/types'
 import { initComponents as originalInitComponents } from '../src/components'
 import { MockedStorage } from '@dcl/catalyst-storage/dist/MockedStorage'
+import { createMockMarketplaceSubGraph } from './marketplace-subgraph-mock'
 
 /**
  * Behaves like Jest "describe" function, used to describe a test for a
@@ -30,6 +31,7 @@ async function initComponents(): Promise<TestComponents> {
   return {
     ...components,
     localFetch: await createLocalFetchCompoment(config),
+    marketplaceSubGraph: createMockMarketplaceSubGraph(),
     storage
   }
 }

@@ -6,20 +6,17 @@ import { Authenticator } from '@dcl/crypto'
 import { hashV1 } from '@dcl/hashing'
 import { bufferToStream } from '@dcl/catalyst-storage/dist/content-item'
 import { stringToUtf8Bytes } from 'eth-connect'
-import { fetchNamesOwnedByAddress } from '../../logic/check-permissions'
+import {
+  allowedToUseSpecifiedDclName,
+  determineDclNameToUse,
+  fetchNamesOwnedByAddress
+} from '../../logic/check-permissions'
 import { SNS } from 'aws-sdk'
 import { DeploymentToSqs } from '@dcl/schemas/dist/misc/deployments-to-sqs'
 
 export function requireString(val: string): string {
   if (typeof val !== 'string') throw new Error('A string was expected')
   return val
-}
-
-function Error400(message: string) {
-  return {
-    status: 400,
-    body: message
-  }
 }
 
 export function extractAuthChain(ctx: FormDataContext): AuthChain {
@@ -58,6 +55,14 @@ export async function deployEntity(
   const logger = ctx.components.logs.getLogger('deploy')
   const sns = new SNS()
 
+  const Error400 = (message: string) => {
+    logger.warn(message)
+    return {
+      status: 400,
+      body: message
+    }
+  }
+
   try {
     const entityId = requireString(ctx.formData.fields.entityId.value)
     const authChain = extractAuthChain(ctx)
@@ -89,6 +94,19 @@ export async function deployEntity(
         `Deployment failed: Your wallet has no permission to publish to this server because it doesn't own a Decentraland NAME.`
       )
     }
+
+    // determine the name to use for deploying the world
+
+    const sceneJson = JSON.parse(ctx.formData.files[entityId].value.toString())
+    if (!allowedToUseSpecifiedDclName(names, sceneJson)) {
+      return Error400(
+        `Deployment failed: Your wallet has no permission to publish to this server because it doesn't own Decentraland NAME "${sceneJson.metadata.worldConfiguration?.dclName}". Check scene.json to select a different name.`
+      )
+    }
+
+    const deploymentDclName = determineDclNameToUse(names, sceneJson)
+
+    logger.debug(`Deployment for scene "${entityId}" under dcl name "${deploymentDclName}.dcl.eth"`)
 
     // then validate that the entityId is valid
     const entityRaw = ctx.formData.files[entityId].value.toString()
@@ -157,7 +175,7 @@ export async function deployEntity(
       bufferToStream(stringToUtf8Bytes(JSON.stringify(authChain)))
     )
     await ctx.components.storage.storeStream(
-      `name-${names[0].toLowerCase()}.dcl.eth`,
+      `name-${deploymentDclName.toLowerCase()}.dcl.eth`,
       bufferToStream(stringToUtf8Bytes(JSON.stringify({ entityId: entityId })))
     )
 
@@ -186,7 +204,7 @@ export async function deployEntity(
       })
     }
 
-    const worldUrl = `${baseUrl}/world/${names[0]}.dcl.eth`
+    const worldUrl = `${baseUrl}/world/${deploymentDclName}.dcl.eth`
     const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}/ipfs`
 
     return {
