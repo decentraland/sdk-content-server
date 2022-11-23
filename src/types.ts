@@ -1,17 +1,17 @@
-import type { IFetchComponent } from "@well-known-components/http-server"
+import type { IFetchComponent } from '@well-known-components/http-server'
 import type {
   IConfigComponent,
   ILoggerComponent,
   IHttpServerComponent,
   IBaseComponent,
-  IMetricsComponent,
-} from "@well-known-components/interfaces"
-import { metricDeclarations } from "./metrics"
-import { IContentStorageComponent } from "@dcl/catalyst-storage"
-import { MockedStorage } from "@dcl/catalyst-storage/dist/MockedStorage"
-import { HTTPProvider } from "eth-connect"
-import { ISubgraphComponent } from "@well-known-components/thegraph-component"
-import { IStatusComponent } from "./adapters/status"
+  IMetricsComponent
+} from '@well-known-components/interfaces'
+import { metricDeclarations } from './metrics'
+import { IContentStorageComponent } from '@dcl/catalyst-storage'
+import { MockedStorage } from '@dcl/catalyst-storage/dist/MockedStorage'
+import { HTTPProvider } from 'eth-connect'
+import { ISubgraphComponent } from '@well-known-components/thegraph-component'
+import { IStatusComponent } from './adapters/status'
 
 export type GlobalContext = {
   components: BaseComponents

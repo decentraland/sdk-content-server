@@ -1,12 +1,12 @@
-import { test } from "../components"
-import { ContentClient } from "dcl-catalyst-client"
-import { EntityType } from "@dcl/schemas"
-import { Authenticator } from "@dcl/crypto"
-import { createUnsafeIdentity } from "@dcl/crypto/dist/crypto"
-import { Response } from "node-fetch"
-import Sinon from "sinon"
-import { stringToUtf8Bytes } from "eth-connect"
-import { hashV1 } from "@dcl/hashing"
+import { test } from '../components'
+import { ContentClient } from 'dcl-catalyst-client'
+import { EntityType } from '@dcl/schemas'
+import { Authenticator } from '@dcl/crypto'
+import { createUnsafeIdentity } from '@dcl/crypto/dist/crypto'
+import { Response } from 'node-fetch'
+import Sinon from 'sinon'
+import { stringToUtf8Bytes } from 'eth-connect'
+import { hashV1 } from '@dcl/hashing'
 
 async function getIdentity() {
   const ephemeralIdentity = createUnsafeIdentity()
@@ -24,44 +24,45 @@ async function getIdentity() {
   return { authChain, realAccount, ephemeralIdentity }
 }
 
-test("deployment works", function ({ components, stubComponents }) {
-  it("creates an entity and deploys it", async () => {
+test('deployment works', function ({ components, stubComponents }) {
+  it('creates an entity and deploys it', async () => {
     const { config, storage } = components
     const { fetch, metrics } = stubComponents
 
     const contentClient = new ContentClient({
-      contentUrl: `http://${await config.requireString("HTTP_SERVER_HOST")}:${await config.requireNumber(
-        "HTTP_SERVER_PORT"
-      )}`,
+      contentUrl: `http://${await config.requireString('HTTP_SERVER_HOST')}:${await config.requireNumber(
+        'HTTP_SERVER_PORT'
+      )}`
     })
 
     const entityFiles = new Map<string, Uint8Array>()
-    entityFiles.set("abc.txt", stringToUtf8Bytes("asd"))
-    const fileHash = await hashV1(entityFiles.get("abc.txt"))
+    entityFiles.set('abc.txt', stringToUtf8Bytes('asd'))
+    const fileHash = await hashV1(entityFiles.get('abc.txt'))
 
     expect(await storage.exist(fileHash)).toEqual(false)
 
     // Build the entity
     const { files, entityId } = await contentClient.buildEntity({
       type: EntityType.SCENE,
-      pointers: ["0,0"],
+      pointers: ['0,0'],
       files: entityFiles,
-      metadata: {},
+      metadata: {}
     })
 
     // Sign entity id
     const identity = await getIdentity()
 
-    fetch.fetch.withArgs(await config.requireString("MARKETPLACE_SUBGRAPH_URL")).resolves(
-      new Response(JSON.stringify({
-            data: {
-              names: [
-                {
-                  name: 'my-super-name'
-                }
-              ]
-            }
-          })
+    fetch.fetch.withArgs(await config.requireString('MARKETPLACE_SUBGRAPH_URL')).resolves(
+      new Response(
+        JSON.stringify({
+          data: {
+            names: [
+              {
+                name: 'my-super-name'
+              }
+            ]
+          }
+        })
       )
     )
 
@@ -70,24 +71,24 @@ test("deployment works", function ({ components, stubComponents }) {
     // Deploy entity
     await contentClient.deployEntity({ files, entityId, authChain })
 
-    Sinon.assert.calledOnceWithMatch(fetch.fetch, await config.requireString("MARKETPLACE_SUBGRAPH_URL"))
+    Sinon.assert.calledOnceWithMatch(fetch.fetch, await config.requireString('MARKETPLACE_SUBGRAPH_URL'))
 
     expect(await storage.exist(fileHash)).toEqual(true)
     expect(await storage.exist(entityId)).toEqual(true)
 
-    Sinon.assert.calledWithMatch(metrics.increment, "world_deployments_counter")
+    Sinon.assert.calledWithMatch(metrics.increment, 'world_deployments_counter')
   })
 })
 
-test("deployment doesnt work because of random key", function ({ components, stubComponents }) {
-  it("fails deployment with ephemeral random key", async () => {
+test('deployment doesnt work because of random key', function ({ components, stubComponents }) {
+  it('fails deployment with ephemeral random key', async () => {
     const { config } = components
     const { fetch } = stubComponents
 
     const contentClient = new ContentClient({
-      contentUrl: `http://${await config.requireString("HTTP_SERVER_HOST")}:${await config.requireNumber(
-        "HTTP_SERVER_PORT"
-      )}`,
+      contentUrl: `http://${await config.requireString('HTTP_SERVER_HOST')}:${await config.requireNumber(
+        'HTTP_SERVER_PORT'
+      )}`
     })
 
     const entityFiles = new Map()
@@ -95,9 +96,9 @@ test("deployment doesnt work because of random key", function ({ components, stu
     // Build the entity
     const { files, entityId } = await contentClient.buildEntity({
       type: EntityType.SCENE,
-      pointers: ["0,0"],
+      pointers: ['0,0'],
       files: entityFiles,
-      metadata: {},
+      metadata: {}
     })
 
     // Sign entity id
@@ -105,13 +106,14 @@ test("deployment doesnt work because of random key", function ({ components, stu
 
     const authChain = Authenticator.signPayload(identity.authChain, entityId)
 
-    fetch.fetch.withArgs(await config.requireString("MARKETPLACE_SUBGRAPH_URL")).resolves(
-        new Response(JSON.stringify({
-              data: {
-                names: []
-              }
-            })
-        )
+    fetch.fetch.withArgs(await config.requireString('MARKETPLACE_SUBGRAPH_URL')).resolves(
+      new Response(
+        JSON.stringify({
+          data: {
+            names: []
+          }
+        })
+      )
     )
 
     // Deploy entity

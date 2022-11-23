@@ -1,5 +1,5 @@
-import { IBaseComponent } from "@well-known-components/interfaces"
-import { BaseComponents } from "../types"
+import { IBaseComponent } from '@well-known-components/interfaces'
+import { BaseComponents } from '../types'
 
 export type ServiceStatus = {
   healthy: boolean
@@ -15,25 +15,25 @@ export type IStatusComponent = IBaseComponent & {
 const STATUS_EXPIRATION_TIME_MS = 1000 * 60 * 5 // 5mins
 
 export async function createStatusComponent(
-  components: Pick<BaseComponents, "fetch" | "logs" | "config">
+  components: Pick<BaseComponents, 'fetch' | 'logs' | 'config'>
 ): Promise<IStatusComponent> {
   const { fetch, logs, config } = components
 
-  const logger = logs.getLogger("status-component")
-  const lambdasUrl = new URL(await config.requireString("LAMBDAS_URL"))
-  const contentUrl = new URL(await config.requireString("CONTENT_URL"))
+  const logger = logs.getLogger('status-component')
+  const lambdasUrl = new URL(await config.requireString('LAMBDAS_URL'))
+  const contentUrl = new URL(await config.requireString('CONTENT_URL'))
 
   const fetchJson = async (baseURL: URL, path: string) => {
     let url = baseURL.toString()
-    if (!url.endsWith("/")) {
-      url += "/"
+    if (!url.endsWith('/')) {
+      url += '/'
     }
     url += path
     const response = await fetch.fetch(url, {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
-      },
+        Accept: 'application/json'
+      }
     })
     return response.json()
   }
@@ -47,11 +47,11 @@ export async function createStatusComponent(
     lastLambdasStatus = {
       time: Date.now(),
       healthy: false,
-      publicUrl: lambdasUrl.toString(),
+      publicUrl: lambdasUrl.toString()
     }
 
     try {
-      await fetchJson(lambdasUrl, "status")
+      await fetchJson(lambdasUrl, 'status')
       lastLambdasStatus.healthy = true
     } catch (err: any) {
       logger.error(err)
@@ -69,12 +69,12 @@ export async function createStatusComponent(
     lastContentStatus = {
       time: Date.now(),
       healthy: false,
-      publicUrl: contentUrl.toString(),
+      publicUrl: contentUrl.toString()
     }
 
     try {
-      const data = await fetchJson(contentUrl, "status")
-      lastContentStatus.healthy = data["synchronizationStatus"]["synchronizationState"] === "Syncing"
+      const data = await fetchJson(contentUrl, 'status')
+      lastContentStatus.healthy = data['synchronizationStatus']['synchronizationState'] === 'Syncing'
     } catch (err: any) {
       logger.error(err)
     }
@@ -83,6 +83,6 @@ export async function createStatusComponent(
   }
   return {
     getLambdasStatus,
-    getContentStatus,
+    getContentStatus
   }
 }

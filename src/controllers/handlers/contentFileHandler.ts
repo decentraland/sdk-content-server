@@ -1,26 +1,26 @@
-import { IHttpServerComponent } from "@well-known-components/interfaces"
-import { IPFSv2 } from "@dcl/schemas"
-import { HandlerContextWithPath } from "../../types"
-import { ContentItem } from "@dcl/catalyst-storage"
+import { IHttpServerComponent } from '@well-known-components/interfaces'
+import { IPFSv2 } from '@dcl/schemas'
+import { HandlerContextWithPath } from '../../types'
+import { ContentItem } from '@dcl/catalyst-storage'
 
 function contentItemHeaders(content: ContentItem, hashId: string) {
   const ret: Record<string, string> = {
-    "Content-Type": "application/octet-stream",
+    'Content-Type': 'application/octet-stream',
     ETag: JSON.stringify(hashId), // by spec, the ETag must be a double-quoted string
-    "Access-Control-Expose-Headers": "ETag",
-    "Cache-Control": "public,max-age=31536000,s-maxage=31536000,immutable",
+    'Access-Control-Expose-Headers': 'ETag',
+    'Cache-Control': 'public,max-age=31536000,s-maxage=31536000,immutable'
   }
   if (content.encoding) {
-    ret["Content-Encoding"] = content.encoding
+    ret['Content-Encoding'] = content.encoding
   }
   if (content.size) {
-    ret["Content-Length"] = content.size.toString()
+    ret['Content-Length'] = content.size.toString()
   }
   return ret
 }
 
 export async function getContentFile(
-  ctx: HandlerContextWithPath<"storage", "/content/contents/:hashId">
+  ctx: HandlerContextWithPath<'storage', '/content/contents/:hashId'>
 ): Promise<IHttpServerComponent.IResponse> {
   if (!IPFSv2.validate(ctx.params.hashId)) return { status: 400 }
 
@@ -32,7 +32,7 @@ export async function getContentFile(
 }
 
 export async function headContentFile(
-  ctx: HandlerContextWithPath<"storage", "/content/contents/:hashId">
+  ctx: HandlerContextWithPath<'storage', '/content/contents/:hashId'>
 ): Promise<IHttpServerComponent.IResponse> {
   if (!IPFSv2.validate(ctx.params.hashId)) return { status: 400 }
 
@@ -44,10 +44,10 @@ export async function headContentFile(
 }
 
 export async function availableContentHandler(
-  ctx: HandlerContextWithPath<"storage", "/content/available-content">
+  ctx: HandlerContextWithPath<'storage', '/content/available-content'>
 ): Promise<IHttpServerComponent.IResponse> {
   const params = new URLSearchParams(ctx.url.search)
-  const cids = params.getAll("cid")
+  const cids = params.getAll('cid')
 
   const results = Array.from((await ctx.components.storage.existMultiple(cids)).entries())
 
@@ -55,7 +55,7 @@ export async function availableContentHandler(
     status: 200,
     body: results.map(([cid, available]) => ({
       cid,
-      available,
-    })),
+      available
+    }))
   }
 }
