@@ -1,16 +1,19 @@
-import { HandlerContextWithPath } from "../../types"
+import { HandlerContextWithPath } from '../../types'
 import {
   AboutResponse,
   AboutResponse_MinimapConfiguration,
   AboutResponse_SkyboxConfiguration
-} from "../../proto/http-endpoints.gen"
-import { streamToBuffer } from "@dcl/catalyst-storage/dist/content-item";
+} from '../../proto/http-endpoints.gen'
+import { streamToBuffer } from '@dcl/catalyst-storage/dist/content-item'
 
 export async function dclNameAboutHandler({
   params,
   url,
-  components: { config, status, storage },
-}: Pick<HandlerContextWithPath<"config" | "status" | "storage", "/world/:dcl_name/about">, "components" | "params" | "url">) {
+  components: { config, status, storage }
+}: Pick<
+  HandlerContextWithPath<'config' | 'status' | 'storage', '/world/:dcl_name/about'>,
+  'components' | 'params' | 'url'
+>) {
   // Retrieve
   const content = await storage.retrieve(`name-${params.dcl_name.toLowerCase()}`) // name should end with .dcl.eth
   if (!content) {
@@ -32,16 +35,15 @@ export async function dclNameAboutHandler({
   }
   const sceneJson = JSON.parse((await streamToBuffer(await scene?.asStream())).toString())
 
-  const baseUrl = ((await config.getString("HTTP_BASE_URL")
-      || `https://${url.host}`).toString())
+  const baseUrl = ((await config.getString('HTTP_BASE_URL')) || `https://${url.host}`).toString()
 
   const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}/ipfs/`
 
-  const networkId = await config.requireNumber("NETWORK_ID")
-  const fixedAdapter = await config.requireString("COMMS_FIXED_ADAPTER")
-  const fixedAdapterPrefix = fixedAdapter.substring(0, fixedAdapter.lastIndexOf("/"))
+  const networkId = await config.requireNumber('NETWORK_ID')
+  const fixedAdapter = await config.requireString('COMMS_FIXED_ADAPTER')
+  const fixedAdapterPrefix = fixedAdapter.substring(0, fixedAdapter.lastIndexOf('/'))
 
-  const globalScenesURN = await config.getString("GLOBAL_SCENES_URN")
+  const globalScenesURN = await config.getString('GLOBAL_SCENES_URN')
 
   const contentStatus = await status.getContentStatus()
   const lambdasStatus = await status.getLambdasStatus()
@@ -51,8 +53,8 @@ export async function dclNameAboutHandler({
   }
   if (sceneJson.metadata.worldConfiguration?.minimapVisible) {
     // TODO We may need allow the scene creator to specify these values
-    minimap.dataImage = "https://api.decentraland.org/v1/minimap.png"
-    minimap.estateImage = "https://api.decentraland.org/v1/estatemap.png"
+    minimap.dataImage = 'https://api.decentraland.org/v1/minimap.png'
+    minimap.estateImage = 'https://api.decentraland.org/v1/estatemap.png'
   }
 
   const skybox: AboutResponse_SkyboxConfiguration = {
@@ -63,29 +65,29 @@ export async function dclNameAboutHandler({
     healthy: contentStatus.healthy && lambdasStatus.healthy,
     configurations: {
       networkId,
-      globalScenesUrn: globalScenesURN ? globalScenesURN.split(" ") : [],
-      scenesUrn: [ urn ],
+      globalScenesUrn: globalScenesURN ? globalScenesURN.split(' ') : [],
+      scenesUrn: [urn],
       minimap,
       skybox,
       realmName: params.dcl_name
     },
     content: {
       healthy: contentStatus.healthy,
-      publicUrl: contentStatus.publicUrl,
+      publicUrl: contentStatus.publicUrl
     },
     lambdas: {
       healthy: lambdasStatus.healthy,
-      publicUrl: lambdasStatus.publicUrl,
+      publicUrl: lambdasStatus.publicUrl
     },
     comms: {
       healthy: true,
-      protocol: "v3",
-      fixedAdapter: `${fixedAdapterPrefix}/${entityId}`,
-    },
+      protocol: 'v3',
+      fixedAdapter: `${fixedAdapterPrefix}/${entityId}`
+    }
   }
 
   return {
     status: 200,
-    body,
+    body
   }
 }

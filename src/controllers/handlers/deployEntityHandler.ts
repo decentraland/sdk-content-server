@@ -1,24 +1,24 @@
-import { AuthChain, Entity, EthAddress, IPFSv2 } from "@dcl/schemas"
-import { IHttpServerComponent } from "@well-known-components/interfaces"
-import { FormDataContext } from "../../logic/multipart"
-import { HandlerContextWithPath } from "../../types"
-import { Authenticator } from "@dcl/crypto"
-import { hashV1 } from "@dcl/hashing"
-import { bufferToStream } from "@dcl/catalyst-storage/dist/content-item"
-import { stringToUtf8Bytes } from "eth-connect"
-import { fetchNamesOwnedByAddress } from "../../logic/check-permissions";
-import { SNS } from "aws-sdk"
-import { DeploymentToSqs } from "@dcl/schemas/dist/misc/deployments-to-sqs";
+import { AuthChain, Entity, EthAddress, IPFSv2 } from '@dcl/schemas'
+import { IHttpServerComponent } from '@well-known-components/interfaces'
+import { FormDataContext } from '../../logic/multipart'
+import { HandlerContextWithPath } from '../../types'
+import { Authenticator } from '@dcl/crypto'
+import { hashV1 } from '@dcl/hashing'
+import { bufferToStream } from '@dcl/catalyst-storage/dist/content-item'
+import { stringToUtf8Bytes } from 'eth-connect'
+import { fetchNamesOwnedByAddress } from '../../logic/check-permissions'
+import { SNS } from 'aws-sdk'
+import { DeploymentToSqs } from '@dcl/schemas/dist/misc/deployments-to-sqs'
 
- export function requireString(val: string): string {
-  if (typeof val !== "string") throw new Error("A string was expected")
+export function requireString(val: string): string {
+  if (typeof val !== 'string') throw new Error('A string was expected')
   return val
 }
 
 function Error400(message: string) {
   return {
     status: 400,
-    body: message,
+    body: message
   }
 }
 
@@ -28,20 +28,20 @@ export function extractAuthChain(ctx: FormDataContext): AuthChain {
   let biggestIndex = -1
 
   // find the biggest index
-  for (let i in ctx.formData.fields) {
+  for (const i in ctx.formData.fields) {
     const regexResult = /authChain\[(\d+)\]/.exec(i)
     if (regexResult) {
       biggestIndex = Math.max(biggestIndex, +regexResult[1])
     }
   }
 
-  if (biggestIndex == -1) throw new Error("Missing auth chain")
+  if (biggestIndex == -1) throw new Error('Missing auth chain')
   // fill all the authchain
   for (let i = 0; i <= biggestIndex; i++) {
     ret.push({
       payload: requireString(ctx.formData.fields[`authChain[${i}][payload]`].value),
       signature: requireString(ctx.formData.fields[`authChain[${i}][signature]`].value),
-      type: requireString(ctx.formData.fields[`authChain[${i}][type]`].value) as any,
+      type: requireString(ctx.formData.fields[`authChain[${i}][type]`].value) as any
     })
   }
 
@@ -49,9 +49,13 @@ export function extractAuthChain(ctx: FormDataContext): AuthChain {
 }
 
 export async function deployEntity(
-  ctx: FormDataContext & HandlerContextWithPath<"config" | "ethereumProvider" | "logs" | "marketplaceSubGraph" | "metrics" | "storage" | "sns", "/entities">
+  ctx: FormDataContext &
+    HandlerContextWithPath<
+      'config' | 'ethereumProvider' | 'logs' | 'marketplaceSubGraph' | 'metrics' | 'storage' | 'sns',
+      '/entities'
+    >
 ): Promise<IHttpServerComponent.IResponse> {
-  const logger = ctx.components.logs.getLogger("deploy")
+  const logger = ctx.components.logs.getLogger('deploy')
   const sns = new SNS()
 
   try {
@@ -61,33 +65,35 @@ export async function deployEntity(
     if (!AuthChain.validate(authChain)) {
       console.dir(authChain)
       console.dir(AuthChain.validate.errors)
-      return Error400("Deployment failed: Invalid auth chain ")
+      return Error400('Deployment failed: Invalid auth chain ')
     }
 
     const signer = authChain[0].payload
 
     if (!EthAddress.validate(signer)) {
-      return Error400("Deployment failed: Invalid auth chain ")
+      return Error400('Deployment failed: Invalid auth chain ')
     }
 
     // first validate auth chain
     const validAuthChain = await Authenticator.validateSignature(signer, authChain, ctx.components.ethereumProvider, 10)
 
     if (validAuthChain.ok) {
-      return Error400("Deployment failed: Invalid auth chain " + validAuthChain.message)
+      return Error400('Deployment failed: Invalid auth chain ' + validAuthChain.message)
     }
 
     // validate that the signer has permissions to deploy this scene. the graph only responds to lower cased addressess
     const names = await fetchNamesOwnedByAddress(ctx.components, signer.toLowerCase())
     const hasPermission = names.length > 0
     if (!hasPermission) {
-      return Error400(`Deployment failed: Your wallet has no permission to publish to this server because it doesn't own a Decentraland NAME.`)
+      return Error400(
+        `Deployment failed: Your wallet has no permission to publish to this server because it doesn't own a Decentraland NAME.`
+      )
     }
 
     // then validate that the entityId is valid
     const entityRaw = ctx.formData.files[entityId].value.toString()
     if ((await hashV1(stringToUtf8Bytes(entityRaw))) != entityId) {
-      return Error400("Deployment failed: Invalid entity hash")
+      return Error400('Deployment failed: Invalid entity hash')
     }
     // then validate that the entity is valid
     const entity: Partial<Entity> = JSON.parse(entityRaw)
@@ -95,10 +101,10 @@ export async function deployEntity(
       !Entity.validate({
         id: entityId, // this is not part of the published entity
         timestamp: Date.now(), // this is not part of the published entity
-        ...entity,
+        ...entity
       })
     ) {
-      return Error400("Deployment failed: Invalid entity schema")
+      return Error400('Deployment failed: Invalid entity schema')
     }
 
     // then validate all files are part of the entity
@@ -109,7 +115,7 @@ export async function deployEntity(
       }
       // only new hashes
       if (!IPFSv2.validate(hash)) {
-        return Error400("Deployment failed: Only CIDv1 are allowed for content files")
+        return Error400('Deployment failed: Only CIDv1 are allowed for content files')
       }
       // hash the file
       if ((await hashV1(ctx.formData.files[hash].value)) !== hash) {
@@ -136,7 +142,7 @@ export async function deployEntity(
     for (const file of entity.content!) {
       if (!allContentHashesInStorage.get(file.hash)) {
         const filename = entity.content!.find(($) => $.hash == file.hash)
-        logger.info(`Storing file`, { cid: file.hash, filename: filename?.file || "unknown" })
+        logger.info(`Storing file`, { cid: file.hash, filename: filename?.file || 'unknown' })
         await ctx.components.storage.storeStream(file.hash, bufferToStream(ctx.formData.files[file.hash].value))
         allContentHashesInStorage.set(file.hash, true)
       }
@@ -147,16 +153,15 @@ export async function deployEntity(
     logger.info(`Storing entity`, { cid: entityId })
     await ctx.components.storage.storeStream(entityId, bufferToStream(stringToUtf8Bytes(entityRaw)))
     await ctx.components.storage.storeStream(
-      entityId + ".auth",
+      entityId + '.auth',
       bufferToStream(stringToUtf8Bytes(JSON.stringify(authChain)))
     )
     await ctx.components.storage.storeStream(
-        `name-${names[0].toLowerCase()}.dcl.eth`,
+      `name-${names[0].toLowerCase()}.dcl.eth`,
       bufferToStream(stringToUtf8Bytes(JSON.stringify({ entityId: entityId })))
     )
 
-    const baseUrl = (await ctx.components.config.getString("HTTP_BASE_URL")
-        || `https://${ctx.url.host}`).toString()
+    const baseUrl = ((await ctx.components.config.getString('HTTP_BASE_URL')) || `https://${ctx.url.host}`).toString()
 
     ctx.components.metrics.increment('world_deployments_counter')
 
@@ -170,14 +175,14 @@ export async function deployEntity(
         contentServerUrls: [baseUrl]
       }
       const receipt = await sns
-          .publish({
-            TopicArn: ctx.components.sns.arn,
-            Message: JSON.stringify(deploymentToSqs),
-          })
-          .promise()
-      logger.info("notification sent", {
+        .publish({
+          TopicArn: ctx.components.sns.arn,
+          Message: JSON.stringify(deploymentToSqs)
+        })
+        .promise()
+      logger.info('notification sent', {
         MessageId: receipt.MessageId as any,
-        SequenceNumber: receipt.SequenceNumber as any,
+        SequenceNumber: receipt.SequenceNumber as any
       })
     }
 
@@ -196,14 +201,10 @@ export async function deployEntity(
             urn
           )}`,
           ``,
-          `Preview as Space: https://play.decentraland.zone/?SPACE=${encodeURIComponent(
-            urn
-          )}`,
-          `Preview as World: https://play.decentraland.zone/?realm=${encodeURIComponent(
-            worldUrl
-          )}`,
-        ].join("\n"),
-      },
+          `Preview as Space: https://play.decentraland.zone/?SPACE=${encodeURIComponent(urn)}`,
+          `Preview as World: https://play.decentraland.zone/?realm=${encodeURIComponent(worldUrl)}`
+        ].join('\n')
+      }
     }
   } catch (err: any) {
     console.error(err)
