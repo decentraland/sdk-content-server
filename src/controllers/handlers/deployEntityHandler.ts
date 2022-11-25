@@ -86,7 +86,7 @@ export async function deployEntity(
       return Error400('Deployment failed: Invalid auth chain ' + validAuthChain.message)
     }
 
-    // validate that the signer has permissions to deploy this scene. the graph only responds to lower cased addressess
+    // validate that the signer has permissions to deploy this scene. the graph only responds to lower cased addresses
     const names = await fetchNamesOwnedByAddress(ctx.components, signer.toLowerCase())
     const hasPermission = names.length > 0
     if (!hasPermission) {
@@ -95,8 +95,6 @@ export async function deployEntity(
       )
     }
 
-    // determine the name to use for deploying the world
-
     const sceneJson = JSON.parse(ctx.formData.files[entityId].value.toString())
     if (!allowedToUseSpecifiedDclName(names, sceneJson)) {
       return Error400(
@@ -104,6 +102,7 @@ export async function deployEntity(
       )
     }
 
+    // determine the name to use for deploying the world
     const deploymentDclName = determineDclNameToUse(names, sceneJson)
 
     logger.debug(`Deployment for scene "${entityId}" under dcl name "${deploymentDclName}.dcl.eth"`)
