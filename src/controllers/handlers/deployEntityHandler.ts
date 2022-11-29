@@ -13,6 +13,7 @@ import {
 } from '../../logic/check-permissions'
 import { SNS } from 'aws-sdk'
 import { DeploymentToSqs } from '@dcl/schemas/dist/misc/deployments-to-sqs'
+import { validateSize } from '../../logic/validations'
 
 export function requireString(val: string): string {
   if (typeof val !== 'string') throw new Error('A string was expected')
@@ -74,14 +75,12 @@ export async function deployEntity(
     }
 
     const signer = authChain[0].payload
-
     if (!EthAddress.validate(signer)) {
       return Error400('Deployment failed: Invalid auth chain ')
     }
 
     // first validate auth chain
     const validAuthChain = await Authenticator.validateSignature(signer, authChain, ctx.components.ethereumProvider, 10)
-
     if (validAuthChain.ok) {
       return Error400('Deployment failed: Invalid auth chain ' + validAuthChain.message)
     }
@@ -154,6 +153,17 @@ export async function deployEntity(
     }
 
     // TODO: run proper validations
+
+    const theFiles: Map<string, Uint8Array> = new Map()
+    for (const filesKey in ctx.formData.files) {
+      theFiles.set(filesKey, ctx.formData.files[filesKey].value)
+    }
+
+    const validationResult = await validateSize(ctx.components, entity as Entity, theFiles)
+    if (!validationResult.ok()) {
+      console.log(validationResult.errors)
+      return Error400(`Deployment failed: ${validationResult.errors.join(', ')}`)
+    }
 
     // store all files
     for (const file of entity.content!) {
