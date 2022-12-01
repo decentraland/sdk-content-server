@@ -161,7 +161,6 @@ export async function deployEntity(
 
     const validationResult = await validateSize(ctx.components, entity as Entity, theFiles)
     if (!validationResult.ok()) {
-      console.log(validationResult.errors)
       return Error400(`Deployment failed: ${validationResult.errors.join(', ')}`)
     }
 
