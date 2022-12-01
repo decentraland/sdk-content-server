@@ -80,8 +80,13 @@ export async function deployEntity(
     }
 
     // first validate auth chain
-    const validAuthChain = await Authenticator.validateSignature(signer, authChain, ctx.components.ethereumProvider, 10)
-    if (validAuthChain.ok) {
+    const validAuthChain = await Authenticator.validateSignature(
+      entityId,
+      authChain,
+      ctx.components.ethereumProvider,
+      10
+    )
+    if (!validAuthChain.ok) {
       return Error400('Deployment failed: Invalid auth chain ' + validAuthChain.message)
     }
 
