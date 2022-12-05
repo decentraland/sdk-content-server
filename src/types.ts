@@ -12,14 +12,44 @@ import { MockedStorage } from '@dcl/catalyst-storage/dist/MockedStorage'
 import { HTTPProvider } from 'eth-connect'
 import { ISubgraphComponent } from '@well-known-components/thegraph-component'
 import { IStatusComponent } from './adapters/status'
+import { AuthChain, Entity, EthAddress } from '@dcl/schemas'
 
 export type GlobalContext = {
   components: BaseComponents
 }
 
+export type DeploymentToValidate = {
+  entity: Entity
+  files: Map<string, Uint8Array>
+  authChain: AuthChain
+  contentHashesInStorage: Map<string, boolean>
+}
+
+export interface Validator {
+  validate(deployment: DeploymentToValidate): Promise<ValidationResult>
+}
+
+export type ValidationResult = {
+  ok: () => boolean
+  errors: string[]
+}
+
+export type Validation = {
+  validate: (
+    components: Pick<AppComponents, 'config' | 'dclNameChecker' | 'ethereumProvider' | 'storage'>,
+    deployment: DeploymentToValidate
+  ) => ValidationResult | Promise<ValidationResult>
+}
+
+export type IDclNameChecker = {
+  fetchNamesOwnedByAddress(ethAddress: EthAddress): Promise<string[]>
+  determineDclNameToUse(names: string[], sceneJson: any): string
+}
+
 // components used in every environment
 export type BaseComponents = {
   config: IConfigComponent
+  dclNameChecker: IDclNameChecker
   logs: ILoggerComponent
   server: IHttpServerComponent<GlobalContext>
   fetch: IFetchComponent
@@ -29,6 +59,7 @@ export type BaseComponents = {
   marketplaceSubGraph: ISubgraphComponent
   status: IStatusComponent
   sns: SnsComponent
+  validator: Validator
 }
 
 export type SnsComponent = { arn?: string }

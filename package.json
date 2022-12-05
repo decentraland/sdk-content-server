@@ -6,7 +6,8 @@
     "lint:check": "eslint '**/*.{js,ts}'",
     "lint:fix": "eslint '**/*.{js,ts}' --fix",
     "start": "node --trace-warnings --abort-on-uncaught-exception --unhandled-rejections=strict dist/index.js",
-    "test": "jest --forceExit --detectOpenHandles --coverage --verbose"
+    "test": "jest --forceExit --detectOpenHandles --verbose",
+    "test:coverage": "jest --forceExit --detectOpenHandles --coverage --verbose"
   },
   "devDependencies": {
     "@dcl/eslint-config": "^1.0.6",
@@ -45,6 +46,7 @@
     "busboy": "^1.6.0",
     "dcl-catalyst-client": "^13.0.15",
     "eth-connect": "^6.0.3",
+    "lru-cache": "^7.14.0",
     "ts-proto": "^1.135.0"
   }
 }

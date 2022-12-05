@@ -1,19 +1,11 @@
-import { AuthChain, Entity, EthAddress, IPFSv2 } from '@dcl/schemas'
-import { IHttpServerComponent } from '@well-known-components/interfaces'
+import { AuthChain, AuthLink, Entity } from '@dcl/schemas'
+import { IHttpServerComponent, ILoggerComponent } from '@well-known-components/interfaces'
 import { FormDataContext } from '../../logic/multipart'
-import { HandlerContextWithPath } from '../../types'
-import { Authenticator } from '@dcl/crypto'
-import { hashV1 } from '@dcl/hashing'
+import { AppComponents, HandlerContextWithPath } from '../../types'
 import { bufferToStream } from '@dcl/catalyst-storage/dist/content-item'
 import { stringToUtf8Bytes } from 'eth-connect'
-import {
-  allowedToUseSpecifiedDclName,
-  determineDclNameToUse,
-  fetchNamesOwnedByAddress
-} from '../../logic/check-permissions'
 import { SNS } from 'aws-sdk'
 import { DeploymentToSqs } from '@dcl/schemas/dist/misc/deployments-to-sqs'
-import { validateSize } from '../../logic/validations'
 
 export function requireString(val: string): string {
   if (typeof val !== 'string') throw new Error('A string was expected')
@@ -27,7 +19,7 @@ export function extractAuthChain(ctx: FormDataContext): AuthChain {
 
   // find the biggest index
   for (const i in ctx.formData.fields) {
-    const regexResult = /authChain\[(\d+)\]/.exec(i)
+    const regexResult = /authChain\[(\d+)]/.exec(i)
     if (regexResult) {
       biggestIndex = Math.max(biggestIndex, +regexResult[1])
     }
@@ -46,10 +38,41 @@ export function extractAuthChain(ctx: FormDataContext): AuthChain {
   return ret
 }
 
+async function storeEntity(
+  { storage }: Pick<AppComponents, 'storage'>,
+  entity: Entity,
+  allContentHashesInStorage: Map<string, boolean>,
+  logger: ILoggerComponent.ILogger,
+  files: Map<string, Uint8Array>,
+  entityJson: string,
+  authChain: AuthLink[],
+  deploymentDclName: string
+) {
+  // store all files
+  for (const file of entity.content!) {
+    if (!allContentHashesInStorage.get(file.hash)) {
+      const filename = entity.content!.find(($) => $.hash == file.hash)
+      logger.info(`Storing file`, { cid: file.hash, filename: filename?.file || 'unknown' })
+      await storage.storeStream(file.hash, bufferToStream(files.get(file.hash)!))
+      allContentHashesInStorage.set(file.hash, true)
+    }
+  }
+
+  // TODO Read already existing entity (if any) and remove all its files (to avoid leaving orphaned files)
+
+  logger.info(`Storing entity`, { cid: entity.id })
+  await storage.storeStream(entity.id, bufferToStream(stringToUtf8Bytes(entityJson)))
+  await storage.storeStream(entity.id + '.auth', bufferToStream(stringToUtf8Bytes(JSON.stringify(authChain))))
+  await storage.storeStream(
+    `name-${deploymentDclName.toLowerCase()}.dcl.eth`,
+    bufferToStream(stringToUtf8Bytes(JSON.stringify({ entityId: entity.id })))
+  )
+}
+
 export async function deployEntity(
   ctx: FormDataContext &
     HandlerContextWithPath<
-      'config' | 'ethereumProvider' | 'logs' | 'marketplaceSubGraph' | 'metrics' | 'storage' | 'sns',
+      'config' | 'ethereumProvider' | 'logs' | 'dclNameChecker' | 'metrics' | 'storage' | 'sns' | 'validator',
       '/entities'
     >
 ): Promise<IHttpServerComponent.IResponse> {
@@ -67,129 +90,52 @@ export async function deployEntity(
   try {
     const entityId = requireString(ctx.formData.fields.entityId.value)
     const authChain = extractAuthChain(ctx)
-
-    if (!AuthChain.validate(authChain)) {
-      console.dir(authChain)
-      console.dir(AuthChain.validate.errors)
-      return Error400('Deployment failed: Invalid auth chain ')
-    }
-
     const signer = authChain[0].payload
-    if (!EthAddress.validate(signer)) {
-      return Error400('Deployment failed: Invalid auth chain ')
-    }
 
-    // first validate auth chain
-    const validAuthChain = await Authenticator.validateSignature(
-      entityId,
-      authChain,
-      ctx.components.ethereumProvider,
-      10
-    )
-    if (!validAuthChain.ok) {
-      return Error400('Deployment failed: Invalid auth chain ' + validAuthChain.message)
-    }
-
-    // validate that the signer has permissions to deploy this scene. the graph only responds to lower cased addresses
-    const names = await fetchNamesOwnedByAddress(ctx.components, signer.toLowerCase())
-    const hasPermission = names.length > 0
-    if (!hasPermission) {
-      return Error400(
-        `Deployment failed: Your wallet has no permission to publish to this server because it doesn't own a Decentraland NAME.`
-      )
-    }
-
-    const sceneJson = JSON.parse(ctx.formData.files[entityId].value.toString())
-    if (!allowedToUseSpecifiedDclName(names, sceneJson)) {
-      return Error400(
-        `Deployment failed: Your wallet has no permission to publish to this server because it doesn't own Decentraland NAME "${sceneJson.metadata.worldConfiguration?.dclName}". Check scene.json to select a different name.`
-      )
-    }
-
-    // determine the name to use for deploying the world
-    const deploymentDclName = determineDclNameToUse(names, sceneJson)
-
-    logger.debug(`Deployment for scene "${entityId}" under dcl name "${deploymentDclName}.dcl.eth"`)
-
-    // then validate that the entityId is valid
     const entityRaw = ctx.formData.files[entityId].value.toString()
-    if ((await hashV1(stringToUtf8Bytes(entityRaw))) != entityId) {
-      return Error400('Deployment failed: Invalid entity hash')
-    }
-    // then validate that the entity is valid
-    const entity: Partial<Entity> = JSON.parse(entityRaw)
-    if (
-      !Entity.validate({
-        id: entityId, // this is not part of the published entity
-        timestamp: Date.now(), // this is not part of the published entity
-        ...entity
-      })
-    ) {
-      return Error400('Deployment failed: Invalid entity schema')
+    const sceneJson = JSON.parse(entityRaw)
+
+    const entity: Entity = {
+      id: entityId, // this is not part of the published entity
+      timestamp: Date.now(), // this is not part of the published entity
+      ...sceneJson
     }
 
-    // then validate all files are part of the entity
-    for (const hash in ctx.formData.files) {
-      // detect extra file
-      if (!entity.content!.some(($) => $.hash == hash) && hash !== entityId) {
-        return Error400(`Deployment failed: Extra file detected ${hash}`)
-      }
-      // only new hashes
-      if (!IPFSv2.validate(hash)) {
-        return Error400('Deployment failed: Only CIDv1 are allowed for content files')
-      }
-      // hash the file
-      if ((await hashV1(ctx.formData.files[hash].value)) !== hash) {
-        return Error400("Deployment failed: The hashed file doesn't match the provided content")
-      }
-    }
-
-    const allContentHashes = Array.from(new Set(entity.content!.map(($) => $.hash)))
-    const allContentHashesInStorage = await ctx.components.storage.existMultiple(allContentHashes)
-
-    // then ensure that all missing files are uploaded
-    for (const file of entity.content!) {
-      const isFilePresent = ctx.formData.files[file.hash] || allContentHashesInStorage.get(file.hash)
-      if (!isFilePresent) {
-        return Error400(
-          `Deployment failed: The file ${file.hash} (${file.file}) is neither present in the storage or in the provided entity`
-        )
-      }
-    }
-
-    // TODO: run proper validations
-
-    const theFiles: Map<string, Uint8Array> = new Map()
+    const uploadedFiles: Map<string, Uint8Array> = new Map()
     for (const filesKey in ctx.formData.files) {
-      theFiles.set(filesKey, ctx.formData.files[filesKey].value)
+      uploadedFiles.set(filesKey, ctx.formData.files[filesKey].value)
     }
 
-    const validationResult = await validateSize(ctx.components, entity as Entity, theFiles)
+    const contentHashesInStorage = await ctx.components.storage.existMultiple(
+      Array.from(new Set(entity.content!.map(($) => $.hash)))
+    )
+
+    // run all validations about the deployment
+    const validationResult = await ctx.components.validator.validate({
+      entity,
+      files: uploadedFiles,
+      authChain,
+      contentHashesInStorage
+    })
     if (!validationResult.ok()) {
       return Error400(`Deployment failed: ${validationResult.errors.join(', ')}`)
     }
 
-    // store all files
-    for (const file of entity.content!) {
-      if (!allContentHashesInStorage.get(file.hash)) {
-        const filename = entity.content!.find(($) => $.hash == file.hash)
-        logger.info(`Storing file`, { cid: file.hash, filename: filename?.file || 'unknown' })
-        await ctx.components.storage.storeStream(file.hash, bufferToStream(ctx.formData.files[file.hash].value))
-        allContentHashesInStorage.set(file.hash, true)
-      }
-    }
+    // determine the name to use for deploying the world
+    const names = await ctx.components.dclNameChecker.fetchNamesOwnedByAddress(signer)
+    const deploymentDclName = ctx.components.dclNameChecker.determineDclNameToUse(names, sceneJson)
+    logger.debug(`Deployment for scene "${entityId}" under dcl name "${deploymentDclName}.dcl.eth"`)
 
-    // TODO Read already existing entity (if any) and remove all its files (to avoid leaving orphaned files)
-
-    logger.info(`Storing entity`, { cid: entityId })
-    await ctx.components.storage.storeStream(entityId, bufferToStream(stringToUtf8Bytes(entityRaw)))
-    await ctx.components.storage.storeStream(
-      entityId + '.auth',
-      bufferToStream(stringToUtf8Bytes(JSON.stringify(authChain)))
-    )
-    await ctx.components.storage.storeStream(
-      `name-${deploymentDclName.toLowerCase()}.dcl.eth`,
-      bufferToStream(stringToUtf8Bytes(JSON.stringify({ entityId: entityId })))
+    // Store the entity
+    await storeEntity(
+      ctx.components,
+      entity,
+      contentHashesInStorage,
+      logger,
+      uploadedFiles,
+      entityRaw,
+      authChain,
+      deploymentDclName
     )
 
     const baseUrl = ((await ctx.components.config.getString('HTTP_BASE_URL')) || `https://${ctx.url.host}`).toString()
@@ -238,7 +184,6 @@ export async function deployEntity(
       }
     }
   } catch (err: any) {
-    console.error(err)
     logger.error(err)
     throw err
   }

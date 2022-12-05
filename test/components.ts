@@ -8,6 +8,9 @@ import { TestComponents } from '../src/types'
 import { initComponents as originalInitComponents } from '../src/components'
 import { MockedStorage } from '@dcl/catalyst-storage/dist/MockedStorage'
 import { createMockMarketplaceSubGraph } from './marketplace-subgraph-mock'
+import { createDclNameChecker } from '../src/logic/dcl-name-checker'
+import { createMockDclNameChecker } from './dcl-name-checker-mock'
+import { createValidator } from '../src/logic/validations'
 
 /**
  * Behaves like Jest "describe" function, used to describe a test for a
@@ -28,10 +31,18 @@ async function initComponents(): Promise<TestComponents> {
 
   const storage = new MockedStorage()
 
+  const dclNameChecker = createMockDclNameChecker()
   return {
     ...components,
     localFetch: await createLocalFetchCompoment(config),
     marketplaceSubGraph: createMockMarketplaceSubGraph(),
+    dclNameChecker,
+    validator: createValidator({
+      config,
+      storage,
+      dclNameChecker,
+      ethereumProvider: components.ethereumProvider
+    }),
     storage
   }
 }
