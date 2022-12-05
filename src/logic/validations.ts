@@ -123,6 +123,22 @@ const validateEntityId: Validation = {
   }
 }
 
+const validateDeploymentTtl: Validation = {
+  validate: async (
+    components: Pick<AppComponents, 'config' | 'dclNameChecker' | 'ethereumProvider' | 'storage'>,
+    deployment: DeploymentToValidate
+  ): Promise<ValidationResult> => {
+    const ttl = Date.now() - deployment.entity.timestamp
+    const maxTtl = (await components.config.getNumber('DEPLOYMENT_TTL')) || 300_000
+    if (ttl > maxTtl) {
+      return createValidationResult([
+        `Deployment was created ${ttl / 1000} secs ago. Max allowed: ${maxTtl / 1000} secs.`
+      ])
+    }
+    return OK
+  }
+}
+
 const validateAuthChain: Validation = {
   validate: async (
     components: Pick<AppComponents, 'config' | 'dclNameChecker' | 'ethereumProvider' | 'storage'>,
@@ -204,6 +220,7 @@ const quickValidations: Validation[] = [
   validateAuthChain,
   validateSigner,
   validateSignature,
+  validateDeploymentTtl,
   validateFiles
 ]
 
