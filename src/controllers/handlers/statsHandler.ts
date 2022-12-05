@@ -1,8 +1,10 @@
 import { HandlerContextWithPath } from '../../types'
 
 export async function statsHandler({
-  components: { storage }
-}: Pick<HandlerContextWithPath<'storage', '/stats'>, 'components' | 'params' | 'url'>) {
+  components: { config, storage }
+}: Pick<HandlerContextWithPath<'config' | 'storage', '/stats'>, 'components' | 'params' | 'url'>) {
+  const commitHash = await config.getString('COMMIT_HASH')
+
   const filtered = []
   for await (const key of await storage.allFileIds('name-')) {
     if (key.endsWith('.dcl.eth')) filtered.push(key.substring(5)) // remove "name-" prefix
@@ -10,6 +12,9 @@ export async function statsHandler({
 
   return {
     status: 200,
-    body: filtered
+    body: {
+      version: commitHash,
+      deployed_names: filtered
+    }
   }
 }
