@@ -6,10 +6,15 @@ on:
       - "main"
 
 jobs:
+  add-hash:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add commit has to .env
+        run: |
+            echo 'COMMIT_HASH=${{ github.sha }}' >> .env
+
   cd-dev:
     uses: decentraland/actions/.github/workflows/build-quay-main.yml@main
-    runs: |
-        echo 'COMMIT_HASH=${{ github.sha }}' >> .env
     with:
       service-name: worlds-content-server
       deployment-environment: dev
