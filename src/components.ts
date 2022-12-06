@@ -21,9 +21,6 @@ import { createDclNameChecker } from './logic/dcl-name-checker'
 export async function initComponents(): Promise<AppComponents> {
   const config = await createDotEnvConfigComponent({ path: ['.env.default', '.env'] })
 
-  const commitHash = await config.getString('COMMIT_HASH')
-  console.log(`commitHash: '${commitHash}'`)
-
   const logs = await createLogComponent({ config })
   const server = await createServerComponent<GlobalContext>({ config, logs }, { cors: {} })
   const statusChecks = await createStatusCheckComponent({ server, config })
