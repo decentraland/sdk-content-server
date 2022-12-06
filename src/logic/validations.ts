@@ -4,8 +4,6 @@ import { stringToUtf8Bytes } from 'eth-connect'
 import { Authenticator } from '@dcl/crypto'
 import { hashV1 } from '@dcl/hashing'
 
-const maxSizeInMB = 15
-
 const createValidationResult = (errors: string[]) => {
   return {
     ok: () => errors.length === 0,
@@ -79,11 +77,21 @@ const validateSize: Validation = {
       return totalSize
     }
 
+    const maxSizeInMB = 15
+    const maxTotalSizeInMB = 200
+
     const errors: string[] = []
     const maxSizeInBytes = maxSizeInMB * 1024 * 1024
 
     try {
       const totalSize = await calculateDeploymentSize(deployment.entity, deployment.files)
+      if (totalSize > maxTotalSizeInMB * 1024 * 1024) {
+        errors.push(
+          `The deployment is too big. The maximum total size allowed is ${maxSizeInMB} MB for scenes. You can upload up to ${
+            maxTotalSizeInMB * 1024 * 1024
+          } bytes but you tried to upload ${totalSize}.`
+        )
+      }
       const sizePerPointer = totalSize / deployment.entity.pointers.length
       if (sizePerPointer > maxSizeInBytes) {
         errors.push(
