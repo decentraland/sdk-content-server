@@ -14,8 +14,9 @@ import {
   createFsComponent
 } from '@dcl/catalyst-storage'
 import { createStatusComponent } from './adapters/status'
-import { createValidator } from './logic/validations'
-import { createDclNameChecker } from './logic/dcl-name-checker'
+import { createValidator } from './adapters/validator'
+import { createDclNameChecker } from './adapters/dcl-name-checker'
+import { createLimitsManagerComponent } from './adapters/limits-manager'
 
 // Initialize all the components of the app
 export async function initComponents(): Promise<AppComponents> {
@@ -55,7 +56,15 @@ export async function initComponents(): Promise<AppComponents> {
 
   const dclNameChecker: IDclNameChecker = createDclNameChecker({ logs, marketplaceSubGraph })
 
-  const validator = createValidator({ config, dclNameChecker, ethereumProvider, storage })
+  const limitsManager = await createLimitsManagerComponent({ config, fetch, logs })
+
+  const validator = createValidator({
+    config,
+    dclNameChecker,
+    ethereumProvider,
+    limitsManager,
+    storage
+  })
 
   return {
     config,
@@ -68,6 +77,7 @@ export async function initComponents(): Promise<AppComponents> {
     ethereumProvider,
     storage,
     marketplaceSubGraph,
+    limitsManager,
     sns,
     status,
     validator

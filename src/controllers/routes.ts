@@ -13,7 +13,7 @@ export async function setupRouter(globalContext: GlobalContext): Promise<Router<
   const router = new Router<GlobalContext>()
 
   router.get('/about', aboutHandler)
-  router.get('/world/:dcl_name/about', dclNameAboutHandler)
+  router.get('/world/:world_name/about', dclNameAboutHandler)
 
   // creation
   router.post('/entities', multipartParserWrapper(deployEntity))

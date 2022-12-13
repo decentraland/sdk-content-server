@@ -11,7 +11,7 @@ export const createDclNameChecker = (
 ): IDclNameChecker => {
   const cache = new LRU<EthAddress, string[]>({
     max: 100,
-    ttl: 1000 * 60 * 5, // cache for 5 minutes
+    ttl: 5 * 60 * 1000, // cache for 5 minutes
     fetchMethod: async (ethAddress: EthAddress): Promise<string[]> => {
       const result = await components.marketplaceSubGraph.query<NamesResponse>(
         `
@@ -25,20 +25,29 @@ export const createDclNameChecker = (
         }
       )
 
-      const names = result.names.map(({ name }) => name)
+      const names = result.names.map(({ name }) => `${name.toLowerCase()}.dcl.eth`)
 
       components.logs.getLogger('check-permissions').debug(`Fetched names for address ${ethAddress}: ${names}`)
       return names
     }
   })
-  return {
-    async fetchNamesOwnedByAddress(ethAddress: EthAddress): Promise<string[]> {
-      return (await cache.fetch(ethAddress))!
-    },
+  const fetchNamesOwnedByAddress = async (ethAddress: EthAddress): Promise<string[]> => {
+    // TheGraph only responds to lower cased addresses
+    return (await cache.fetch(ethAddress.toLowerCase()))!
+  }
+  const determineDclNameToUse = async (ethAddress: EthAddress, sceneJson: any): Promise<string | undefined> => {
+    const names = await fetchNamesOwnedByAddress(ethAddress)
+    const requestedName = sceneJson.metadata.worldConfiguration?.dclName
 
-    determineDclNameToUse(names: string[], sceneJson: any): string {
-      const worldSpecifiedName: string | undefined = sceneJson.metadata.worldConfiguration?.dclName
-      return worldSpecifiedName?.substring(0, worldSpecifiedName?.length - 8) || names[0]
+    if (requestedName && names.includes(requestedName)) {
+      return requestedName
     }
+
+    return names[0]
+  }
+
+  return {
+    fetchNamesOwnedByAddress,
+    determineDclNameToUse
   }
 }

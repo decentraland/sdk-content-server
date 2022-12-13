@@ -6,11 +6,9 @@ It uses the `@dcl/catalyst-storage` library to store the deployments directly on
 
 # Deploying entities to this server
 
-The deployments accepted by this server only run one validation: Allowlist of signer address.
+For a deployment to be accepted by this server, the wallet deploying must own a DCL name.
 
-The validations are performed against https://config.decentraland.org/allowed-pushers-px.json, this can be easily configured in the file [src/logic/fetch-allowed-addresses.ts](src/logic/fetch-allowed-addresses.ts)
-
-Besides the schema and hashing validity of the entities, no other ownership or file size checks are performed.
+When the scene doesn't specify the name of the world in `scene.json`, the first owned DCL name (in alphabetical order) will be used. When the scene does specify one, that name must be owned by the wallet signing the deployment.
 
 ## Deploying using the CLI tool
 

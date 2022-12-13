@@ -19,5 +19,7 @@ jobs:
         run:  npm run lint:check
       - name: build
         run: make build
+      - name: create .env
+        run: echo "" >> .env
       - name: test
         run: npm run test:coverage

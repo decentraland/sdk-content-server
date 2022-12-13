@@ -11,15 +11,15 @@ export async function dclNameAboutHandler({
   url,
   components: { config, status, storage }
 }: Pick<
-  HandlerContextWithPath<'config' | 'status' | 'storage', '/world/:dcl_name/about'>,
+  HandlerContextWithPath<'config' | 'status' | 'storage', '/world/:world_name/about'>,
   'components' | 'params' | 'url'
 >) {
   // Retrieve
-  const content = await storage.retrieve(`name-${params.dcl_name.toLowerCase()}`) // name should end with .dcl.eth
+  const content = await storage.retrieve(`name-${params.world_name.toLowerCase()}`)
   if (!content) {
     return {
       status: 404,
-      body: `DCL name "${params.dcl_name}" has no scene deployed.`
+      body: `World "${params.world_name}" has no scene deployed.`
     }
   }
 
@@ -69,7 +69,7 @@ export async function dclNameAboutHandler({
       scenesUrn: [urn],
       minimap,
       skybox,
-      realmName: params.dcl_name
+      realmName: params.world_name
     },
     content: {
       healthy: contentStatus.healthy,

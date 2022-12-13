@@ -2,26 +2,10 @@ import { test } from '../components'
 import { ContentClient } from 'dcl-catalyst-client'
 import { EntityType } from '@dcl/schemas'
 import { Authenticator } from '@dcl/crypto'
-import { createUnsafeIdentity } from '@dcl/crypto/dist/crypto'
 import Sinon from 'sinon'
 import { stringToUtf8Bytes } from 'eth-connect'
 import { hashV1 } from '@dcl/hashing'
-
-async function getIdentity() {
-  const ephemeralIdentity = createUnsafeIdentity()
-  const realAccount = createUnsafeIdentity()
-
-  const authChain = await Authenticator.initializeAuthChain(
-    realAccount.address,
-    ephemeralIdentity,
-    10,
-    async (message) => {
-      return Authenticator.createSignature(realAccount, message)
-    }
-  )
-
-  return { authChain, realAccount, ephemeralIdentity }
-}
+import { getIdentity } from '../utils'
 
 test('deployment works', function ({ components, stubComponents }) {
   it('creates an entity and deploys it', async () => {
@@ -53,16 +37,22 @@ test('deployment works', function ({ components, stubComponents }) {
 
     dclNameChecker.fetchNamesOwnedByAddress
       .withArgs(identity.authChain.authChain[0].payload)
-      .resolves(['my-super-name'])
-    dclNameChecker.determineDclNameToUse.withArgs(['my-super-name'], Sinon.match.any).returns('my-super-name')
+      .resolves(['my-super-name.dcl.eth'])
+    dclNameChecker.determineDclNameToUse
+      .withArgs(identity.authChain.authChain[0].payload, Sinon.match.any)
+      .resolves('my-super-name.dcl.eth')
 
     const authChain = Authenticator.signPayload(identity.authChain, entityId)
 
     // Deploy entity
     await contentClient.deployEntity({ files, entityId, authChain })
 
-    Sinon.assert.calledTwice(dclNameChecker.fetchNamesOwnedByAddress)
-    Sinon.assert.calledOnce(dclNameChecker.determineDclNameToUse)
+    Sinon.assert.calledWith(dclNameChecker.fetchNamesOwnedByAddress, identity.authChain.authChain[0].payload)
+    Sinon.assert.calledWith(
+      dclNameChecker.determineDclNameToUse,
+      identity.authChain.authChain[0].payload,
+      Sinon.match.any
+    )
 
     expect(await storage.exist(fileHash)).toEqual(true)
     expect(await storage.exist(entityId)).toEqual(true)
@@ -105,19 +95,22 @@ test('deployment works', function ({ components, stubComponents }) {
 
     dclNameChecker.fetchNamesOwnedByAddress
       .withArgs(identity.authChain.authChain[0].payload)
-      .resolves(['my-super-name', 'just-do-it'])
+      .resolves(['my-super-name.dcl.eth', 'just-do-it.dcl.eth'])
     dclNameChecker.determineDclNameToUse
-      .withArgs(['my-super-name', 'just-do-it'], Sinon.match.any)
-      .returns('just-do-it')
+      .withArgs(identity.authChain.authChain[0].payload, Sinon.match.any)
+      .resolves('just-do-it.dcl.eth')
 
     const authChain = Authenticator.signPayload(identity.authChain, entityId)
 
     // Deploy entity
     await contentClient.deployEntity({ files, entityId, authChain })
 
-    // Sinon.assert.calledOnce(marketplaceSubGraph.query)
-    Sinon.assert.calledTwice(dclNameChecker.fetchNamesOwnedByAddress)
-    Sinon.assert.calledOnce(dclNameChecker.determineDclNameToUse)
+    Sinon.assert.calledWith(dclNameChecker.fetchNamesOwnedByAddress, identity.authChain.authChain[0].payload)
+    Sinon.assert.calledWith(
+      dclNameChecker.determineDclNameToUse,
+      identity.authChain.authChain[0].payload,
+      Sinon.match.any
+    )
 
     expect(await storage.exist(fileHash)).toEqual(true)
     expect(await storage.exist(entityId)).toEqual(true)
@@ -160,7 +153,7 @@ test('deployment with failed validation', function ({ components, stubComponents
 
     dclNameChecker.fetchNamesOwnedByAddress
       .withArgs(identity.authChain.authChain[0].payload)
-      .resolves(['my-super-name'])
+      .resolves(['my-super-name.dcl.eth'])
 
     const authChain = Authenticator.signPayload(identity.authChain, entityId)
 
@@ -169,8 +162,12 @@ test('deployment with failed validation', function ({ components, stubComponents
       'Your wallet has no permission to publish to this server because it doesn\'t own Decentraland NAME "just-do-it.dcl.eth".'
     )
 
-    Sinon.assert.calledOnce(dclNameChecker.fetchNamesOwnedByAddress)
-    Sinon.assert.notCalled(dclNameChecker.determineDclNameToUse)
+    Sinon.assert.calledWith(dclNameChecker.fetchNamesOwnedByAddress, identity.authChain.authChain[0].payload)
+    Sinon.assert.calledWith(
+      dclNameChecker.determineDclNameToUse,
+      identity.authChain.authChain[0].payload,
+      Sinon.match.any
+    )
 
     expect(await storage.exist(fileHash)).toEqual(false)
     expect(await storage.exist(entityId)).toEqual(false)
@@ -216,8 +213,12 @@ test('deployment with failed validation', function ({ components, stubComponents
       "Your wallet has no permission to publish to this server because it doesn't own a Decentraland NAME."
     )
 
-    Sinon.assert.calledOnce(dclNameChecker.fetchNamesOwnedByAddress)
-    Sinon.assert.notCalled(dclNameChecker.determineDclNameToUse)
+    Sinon.assert.calledWith(dclNameChecker.fetchNamesOwnedByAddress, identity.authChain.authChain[0].payload)
+    Sinon.assert.calledWith(
+      dclNameChecker.determineDclNameToUse,
+      identity.authChain.authChain[0].payload,
+      Sinon.match.any
+    )
 
     expect(await storage.exist(fileHash)).toEqual(false)
     expect(await storage.exist(entityId)).toEqual(false)

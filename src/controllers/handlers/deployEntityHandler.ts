@@ -46,7 +46,7 @@ async function storeEntity(
   files: Map<string, Uint8Array>,
   entityJson: string,
   authChain: AuthLink[],
-  deploymentDclName: string
+  worldName: string
 ) {
   // store all files
   for (const file of entity.content!) {
@@ -64,7 +64,7 @@ async function storeEntity(
   await storage.storeStream(entity.id, bufferToStream(stringToUtf8Bytes(entityJson)))
   await storage.storeStream(entity.id + '.auth', bufferToStream(stringToUtf8Bytes(JSON.stringify(authChain))))
   await storage.storeStream(
-    `name-${deploymentDclName.toLowerCase()}.dcl.eth`,
+    `name-${worldName.toLowerCase()}`,
     bufferToStream(stringToUtf8Bytes(JSON.stringify({ entityId: entity.id })))
   )
 }
@@ -122,9 +122,8 @@ export async function deployEntity(
     }
 
     // determine the name to use for deploying the world
-    const names = await ctx.components.dclNameChecker.fetchNamesOwnedByAddress(signer)
-    const deploymentDclName = ctx.components.dclNameChecker.determineDclNameToUse(names, sceneJson)
-    logger.debug(`Deployment for scene "${entityId}" under dcl name "${deploymentDclName}.dcl.eth"`)
+    const worldName = (await ctx.components.dclNameChecker.determineDclNameToUse(signer, sceneJson))!
+    logger.debug(`Deployment for scene "${entityId}" under dcl name "${worldName}"`)
 
     // Store the entity
     await storeEntity(
@@ -135,7 +134,7 @@ export async function deployEntity(
       uploadedFiles,
       entityRaw,
       authChain,
-      deploymentDclName
+      worldName
     )
 
     const baseUrl = ((await ctx.components.config.getString('HTTP_BASE_URL')) || `https://${ctx.url.host}`).toString()
@@ -163,7 +162,7 @@ export async function deployEntity(
       })
     }
 
-    const worldUrl = `${baseUrl}/world/${deploymentDclName}.dcl.eth`
+    const worldUrl = `${baseUrl}/world/${worldName}`
     const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}/ipfs`
 
     return {
