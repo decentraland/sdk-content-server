@@ -7,6 +7,7 @@ import { deployEntity } from './handlers/deployEntityHandler'
 import { dclNameAboutHandler } from './handlers/dclNameAboutHandler'
 import { statsHandler } from './handlers/statsHandler'
 import { createAuthMiddleware } from './handlers/auth-middleware'
+import { statusHandler } from './handlers/statusHandler'
 
 // We return the entire router because it will be easier to test than a whole server
 export async function setupRouter(globalContext: GlobalContext): Promise<Router<GlobalContext>> {
@@ -27,6 +28,7 @@ export async function setupRouter(globalContext: GlobalContext): Promise<Router<
   router.head('/contents/:hashId', headContentFile)
   router.get('/contents/:hashId', getContentFile)
 
+  router.get('/status', statusHandler)
   router.get('/stats', await createAuthMiddleware(globalContext.components), statsHandler)
 
   return router

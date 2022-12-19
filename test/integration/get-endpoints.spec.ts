@@ -55,8 +55,19 @@ test('consume stats endpoint', function ({ components }) {
     const r = await localFetch.fetch('/stats')
     expect(r.status).toEqual(200)
     expect(await r.json()).toEqual({
-      version: 'unknown',
       deployed_names: ['some-name.dcl.eth']
+    })
+  })
+})
+
+test('consume stats endpoint', function ({ components }) {
+  it('responds /status works', async () => {
+    const { localFetch } = components
+
+    const r = await localFetch.fetch('/status')
+    expect(r.status).toEqual(200)
+    expect(await r.json()).toEqual({
+      commitHash: 'unknown'
     })
   })
 })
