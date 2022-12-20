@@ -12,6 +12,7 @@ import { createMockDclNameChecker } from './mocks/dcl-name-checker-mock'
 import { createValidator } from '../src/adapters/validator'
 import { createFetchComponent } from '../src/adapters/fetch'
 import { createMockLimitsManagerComponent } from './mocks/limits-manager-mock'
+import { createWorldsManagerComponent } from '../src/adapters/worlds-manager'
 
 /**
  * Behaves like Jest "describe" function, used to describe a test for a
@@ -28,7 +29,7 @@ export const test = createRunner<TestComponents>({
 async function initComponents(): Promise<TestComponents> {
   const components = await originalInitComponents()
 
-  const { config } = components
+  const { config, logs } = components
 
   const storage = new MockedStorage()
 
@@ -46,6 +47,7 @@ async function initComponents(): Promise<TestComponents> {
     ethereumProvider: components.ethereumProvider
   })
 
+  const worldsManager = await createWorldsManagerComponent({ storage, logs })
   return {
     ...components,
     localFetch: await createLocalFetchCompoment(config),
@@ -54,6 +56,7 @@ async function initComponents(): Promise<TestComponents> {
     fetch,
     limitsManager,
     validator,
-    storage
+    storage,
+    worldsManager
   }
 }

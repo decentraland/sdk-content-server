@@ -43,8 +43,8 @@ test('consume content endpoints', function ({ components }) {
   })
 })
 
-test('consume stats endpoint', function ({ components }) {
-  it('responds /stats works', async () => {
+test('consume status endpoint', function ({ components }) {
+  it('responds /status works', async () => {
     const { localFetch, storage } = components
 
     storage.storage.set(
@@ -52,23 +52,32 @@ test('consume stats endpoint', function ({ components }) {
       stringToUtf8Bytes(JSON.stringify({ entityId: 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y' }))
     )
 
-    const r = await localFetch.fetch('/stats')
-    expect(r.status).toEqual(200)
-    expect(await r.json()).toEqual({
-      deployed_names: ['some-name.dcl.eth']
-    })
-  })
-})
+    {
+      // Without authentication deployedWorlds is not retrieved
+      const r = await localFetch.fetch('/status')
 
-test('consume stats endpoint', function ({ components }) {
-  it('responds /status works', async () => {
-    const { localFetch } = components
+      expect(r.status).toEqual(200)
+      expect(await r.json()).toEqual({
+        commitHash: 'unknown',
+        worldsCount: 1
+      })
+    }
 
-    const r = await localFetch.fetch('/status')
-    expect(r.status).toEqual(200)
-    expect(await r.json()).toEqual({
-      commitHash: 'unknown'
-    })
+    {
+      // With authentication deployedWorlds is retrieved
+      const r = await localFetch.fetch('/status', {
+        headers: {
+          Authorization: 'Bearer changeme'
+        }
+      })
+
+      expect(r.status).toEqual(200)
+      expect(await r.json()).toEqual({
+        commitHash: 'unknown',
+        worldsCount: 1,
+        deployedWorlds: ['some-name.dcl.eth']
+      })
+    }
   })
 })
 

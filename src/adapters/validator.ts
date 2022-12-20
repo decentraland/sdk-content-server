@@ -152,7 +152,7 @@ export const validateFiles: Validation = {
     const errors: string[] = []
 
     // validate all files are part of the entity
-    for (const [hash, _] of deployment.files) {
+    for (const [hash] of deployment.files) {
       // detect extra file
       if (!deployment.entity.content!.some(($) => $.hash === hash) && hash !== deployment.entity.id) {
         errors.push(`Extra file detected ${hash}`)

@@ -17,12 +17,19 @@ import { createStatusComponent } from './adapters/status'
 import { createValidator } from './adapters/validator'
 import { createDclNameChecker } from './adapters/dcl-name-checker'
 import { createLimitsManagerComponent } from './adapters/limits-manager'
+import { createWorldsManagerComponent } from './adapters/worlds-manager'
 
 // Initialize all the components of the app
 export async function initComponents(): Promise<AppComponents> {
   const config = await createDotEnvConfigComponent({ path: ['.env.default', '.env'] })
-
   const logs = await createLogComponent({ config })
+
+  const logger = logs.getLogger('components')
+  const secret = await config.getString('AUTH_SECRET')
+  if (!secret) {
+    logger.warn('No secret defined, deployed worlds will not be returned.')
+  }
+
   const server = await createServerComponent<GlobalContext>({ config, logs }, { cors: {} })
   const statusChecks = await createStatusCheckComponent({ server, config })
   const fetch = await createFetchComponent()
@@ -66,6 +73,7 @@ export async function initComponents(): Promise<AppComponents> {
     storage
   })
 
+  const worldsManager = await createWorldsManagerComponent({ logs, storage })
   return {
     config,
     dclNameChecker,
@@ -80,6 +88,7 @@ export async function initComponents(): Promise<AppComponents> {
     limitsManager,
     sns,
     status,
-    validator
+    validator,
+    worldsManager
   }
 }

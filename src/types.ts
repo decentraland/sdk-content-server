@@ -57,6 +57,11 @@ export type ILimitsManager = {
   getMaxAllowedSizeInMbFor(worldName: string): Promise<number>
 }
 
+export type IWorldsManager = {
+  getDeployedWorldsNames(): Promise<string[]>
+  getDeployedWorldsCount(): Promise<number>
+}
+
 // components used in every environment
 export type BaseComponents = {
   config: IConfigComponent
@@ -72,6 +77,7 @@ export type BaseComponents = {
   status: IStatusComponent
   sns: SnsComponent
   validator: Validator
+  worldsManager: IWorldsManager
 }
 
 export type SnsComponent = { arn?: string }
