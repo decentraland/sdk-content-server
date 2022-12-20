@@ -30,7 +30,7 @@
     "protocVersion": "21.6"
   },
   "dependencies": {
-    "@dcl/catalyst-storage": "^2.0.1",
+    "@dcl/catalyst-storage": "^2.0.2-20221220152949.commit-0c86407",
     "@dcl/crypto": "^3.2.3",
     "@dcl/hashing": "^1.1.2",
     "@dcl/protocol": "^1.0.0-3205348640.commit-bd227bf",
