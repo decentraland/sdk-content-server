@@ -5,6 +5,7 @@ import {
   AboutResponse_SkyboxConfiguration
 } from '../../proto/http-endpoints.gen'
 import { streamToBuffer } from '@dcl/catalyst-storage/dist/content-item'
+import { IConfigComponent } from '@well-known-components/interfaces'
 
 export async function dclNameAboutHandler({
   params,
@@ -40,8 +41,7 @@ export async function dclNameAboutHandler({
   const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}/ipfs/`
 
   const networkId = await config.requireNumber('NETWORK_ID')
-  const fixedAdapter = await config.requireString('COMMS_FIXED_ADAPTER')
-  const fixedAdapterPrefix = fixedAdapter.substring(0, fixedAdapter.lastIndexOf('/'))
+  const fixedAdapter = await resolveFixedAdapter(config, entityId, sceneJson)
 
   const globalScenesURN = await config.getString('GLOBAL_SCENES_URN')
 
@@ -82,7 +82,7 @@ export async function dclNameAboutHandler({
     comms: {
       healthy: true,
       protocol: 'v3',
-      fixedAdapter: `${fixedAdapterPrefix}/${entityId}`
+      fixedAdapter: fixedAdapter
     }
   }
 
@@ -90,4 +90,14 @@ export async function dclNameAboutHandler({
     status: 200,
     body
   }
+}
+
+async function resolveFixedAdapter(config: IConfigComponent, entityId: string, sceneJson: any) {
+  if (sceneJson.metadata.worldConfiguration?.fixedAdapter === 'offline') {
+    return 'offline'
+  }
+
+  const fixedAdapter = await config.requireString('COMMS_FIXED_ADAPTER')
+  const fixedAdapterPrefix = fixedAdapter.substring(0, fixedAdapter.lastIndexOf('/'))
+  return `${fixedAdapterPrefix}/${entityId}`
 }
