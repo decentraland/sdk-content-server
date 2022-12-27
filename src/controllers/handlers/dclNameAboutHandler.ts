@@ -93,8 +93,8 @@ export async function dclNameAboutHandler({
 }
 
 async function resolveFixedAdapter(config: IConfigComponent, entityId: string, sceneJson: any) {
-  if (sceneJson.metadata.worldConfiguration?.fixedAdapter === 'offline') {
-    return 'offline'
+  if (sceneJson.metadata.worldConfiguration?.fixedAdapter === 'offline:offline') {
+    return 'offline:offline'
   }
 
   const fixedAdapter = await config.requireString('COMMS_FIXED_ADAPTER')

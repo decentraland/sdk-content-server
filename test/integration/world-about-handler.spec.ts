@@ -89,7 +89,7 @@ test('world about handler /world/:world_name/about', function ({ components }) {
         JSON.stringify({
           metadata: {
             worldConfiguration: {
-              fixedAdapter: 'offline'
+              fixedAdapter: 'offline:offline'
             }
           }
         })
@@ -106,7 +106,7 @@ test('world about handler /world/:world_name/about', function ({ components }) {
       comms: {
         healthy: true,
         protocol: 'v3',
-        fixedAdapter: 'offline'
+        fixedAdapter: 'offline:offline'
       }
     })
   })
