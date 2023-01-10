@@ -8,7 +8,7 @@ import { TestComponents } from '../src/types'
 import { initComponents as originalInitComponents } from '../src/components'
 import { MockedStorage } from '@dcl/catalyst-storage/dist/MockedStorage'
 import { createMockMarketplaceSubGraph } from './mocks/marketplace-subgraph-mock'
-import { createMockDclNameChecker } from './mocks/dcl-name-checker-mock'
+import { createMockNamePermissionChecker } from './mocks/dcl-name-checker-mock'
 import { createValidator } from '../src/adapters/validator'
 import { createFetchComponent } from '../src/adapters/fetch'
 import { createMockLimitsManagerComponent } from './mocks/limits-manager-mock'
@@ -33,7 +33,7 @@ async function initComponents(): Promise<TestComponents> {
 
   const storage = new MockedStorage()
 
-  const dclNameChecker = createMockDclNameChecker()
+  const namePermissionChecker = createMockNamePermissionChecker()
 
   const fetch = await createFetchComponent()
 
@@ -42,7 +42,7 @@ async function initComponents(): Promise<TestComponents> {
   const validator = createValidator({
     config,
     storage,
-    dclNameChecker,
+    namePermissionChecker,
     limitsManager,
     ethereumProvider: components.ethereumProvider
   })
@@ -52,7 +52,7 @@ async function initComponents(): Promise<TestComponents> {
     ...components,
     localFetch: await createLocalFetchCompoment(config),
     marketplaceSubGraph: createMockMarketplaceSubGraph(),
-    dclNameChecker,
+    namePermissionChecker: namePermissionChecker,
     fetch,
     limitsManager,
     validator,

@@ -1,24 +1,15 @@
 import { EthAddress } from '@dcl/schemas'
-import { IDclNameChecker } from '../../src/types'
+import { IWorldNamePermissionChecker } from '../../src/types'
 
-export function createMockDclNameChecker(names?: string[]): IDclNameChecker {
-  const fetchNamesOwnedByAddress = async (_ethAddress: EthAddress): Promise<string[]> => {
-    return Promise.resolve(names || [])
-  }
-
-  const determineDclNameToUse = async (ethAddress: EthAddress, sceneJson: any): Promise<string> => {
-    const names = await fetchNamesOwnedByAddress(ethAddress)
-    const requestedName = sceneJson.metadata.worldConfiguration?.dclName
-
-    if (requestedName && names.includes(requestedName)) {
-      return requestedName
+export function createMockNamePermissionChecker(names?: string[]): IWorldNamePermissionChecker {
+  const checkPermission = async (_ethAddress: EthAddress, worldName: string): Promise<boolean> => {
+    if (worldName.length === 0) {
+      return false
     }
 
-    return names[0]
+    return names && names.map((name) => name.toLowerCase()).includes(worldName.toLowerCase())
   }
-
   return {
-    determineDclNameToUse,
-    fetchNamesOwnedByAddress
+    checkPermission
   }
 }

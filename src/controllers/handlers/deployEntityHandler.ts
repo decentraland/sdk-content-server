@@ -72,7 +72,7 @@ async function storeEntity(
 export async function deployEntity(
   ctx: FormDataContext &
     HandlerContextWithPath<
-      'config' | 'ethereumProvider' | 'logs' | 'dclNameChecker' | 'metrics' | 'storage' | 'sns' | 'validator',
+      'config' | 'ethereumProvider' | 'logs' | 'namePermissionChecker' | 'metrics' | 'storage' | 'sns' | 'validator',
       '/entities'
     >
 ): Promise<IHttpServerComponent.IResponse> {
@@ -90,7 +90,6 @@ export async function deployEntity(
   try {
     const entityId = requireString(ctx.formData.fields.entityId.value)
     const authChain = extractAuthChain(ctx)
-    const signer = authChain[0].payload
 
     const entityRaw = ctx.formData.files[entityId].value.toString()
     const sceneJson = JSON.parse(entityRaw)
@@ -122,8 +121,8 @@ export async function deployEntity(
     }
 
     // determine the name to use for deploying the world
-    const worldName = (await ctx.components.dclNameChecker.determineDclNameToUse(signer, sceneJson))!
-    logger.debug(`Deployment for scene "${entityId}" under dcl name "${worldName}"`)
+    const worldName = sceneJson.metadata.worldConfiguration.name
+    logger.debug(`Deployment for scene "${entityId}" under world name "${worldName}"`)
 
     // Store the entity
     await storeEntity(

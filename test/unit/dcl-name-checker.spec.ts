@@ -15,126 +15,46 @@ describe('dcl name checker', function () {
     })
   })
 
-  describe('when wallet owns no names', function () {
-    let dclNameChecker
-
-    beforeEach(async () => {
-      dclNameChecker = createDclNameChecker({
-        logs,
-        marketplaceSubGraph: {
-          query: async (_query: string, _variables?: Variables, _remainingAttempts?: number): Promise<any> => ({
-            names: []
-          })
-        }
-      })
-    })
-
-    it('and no specific name is requested', async () => {
-      await expect(dclNameChecker.determineDclNameToUse('0xb', { metadata: {} })).resolves.toBeUndefined()
-    })
-
-    it('and a specific name is requested', async () => {
-      await expect(
-        dclNameChecker.determineDclNameToUse('0xb', {
-          metadata: { worldConfiguration: { dclName: 'my-super-name.dcl.eth' } }
+  it('when permission asked for invalid name returns false', async () => {
+    const dclNameChecker = createDclNameChecker({
+      logs,
+      marketplaceSubGraph: {
+        query: async (_query: string, _variables?: Variables, _remainingAttempts?: number): Promise<any> => ({
+          names: []
         })
-      ).resolves.toBeUndefined()
+      }
     })
 
-    it('and a specific name is requested but it is not an owned one', async () => {
-      await expect(
-        dclNameChecker.determineDclNameToUse('0xb', {
-          metadata: { worldConfiguration: { dclName: 'other.dcl.eth' } }
-        })
-      ).resolves.toBeUndefined()
-    })
+    await expect(dclNameChecker.checkPermission('0xb', '')).resolves.toBeFalsy()
   })
 
-  describe('when wallet owns one name', function () {
-    let dclNameChecker
-
-    beforeEach(async () => {
-      dclNameChecker = createDclNameChecker({
-        logs,
-        marketplaceSubGraph: {
-          query: async (_query: string, _variables?: Variables, _remainingAttempts?: number): Promise<any> => {
-            return {
-              names: [
-                {
-                  name: 'my-super-name'
-                }
-              ]
-            }
-          }
-        }
-      })
-    })
-
-    it('and no specific name is requested', async () => {
-      await expect(dclNameChecker.determineDclNameToUse('0xb', { metadata: {} })).resolves.toBe('my-super-name.dcl.eth')
-    })
-
-    it('and a specific name is requested', async () => {
-      await expect(
-        dclNameChecker.determineDclNameToUse('0xb', {
-          metadata: { worldConfiguration: { dclName: 'my-super-name.dcl.eth' } }
+  it('when no names returned from TheGraph returns false', async () => {
+    const dclNameChecker = createDclNameChecker({
+      logs,
+      marketplaceSubGraph: {
+        query: async (_query: string, _variables?: Variables, _remainingAttempts?: number): Promise<any> => ({
+          names: []
         })
-      ).resolves.toBe('my-super-name.dcl.eth')
+      }
     })
 
-    it('and a specific name is requested but it is not an owned one', async () => {
-      await expect(
-        dclNameChecker.determineDclNameToUse('0xb', {
-          metadata: { worldConfiguration: { dclName: 'other.dcl.eth' } }
-        })
-      ).resolves.toBe('my-super-name.dcl.eth')
-    })
+    await expect(dclNameChecker.checkPermission('0xb', 'my-super-name.dcl.eth')).resolves.toBeFalsy()
   })
 
-  describe('when wallet owns multiple names', function () {
-    let dclNameChecker
-
-    beforeEach(async () => {
-      dclNameChecker = createDclNameChecker({
-        logs,
-        marketplaceSubGraph: {
-          query: async (_query: string, _variables?: Variables, _remainingAttempts?: number): Promise<any> => {
-            return {
-              names: [
-                {
-                  name: 'bar'
-                },
-                {
-                  name: 'baz'
-                },
-                {
-                  name: 'foo'
-                }
-              ]
+  it('when requested name is returned from TheGraph returns true', async () => {
+    const dclNameChecker = createDclNameChecker({
+      logs,
+      marketplaceSubGraph: {
+        query: async (_query: string, _variables?: Variables, _remainingAttempts?: number): Promise<any> => ({
+          names: [
+            {
+              name: 'my-super-name'
             }
-          }
-        }
-      })
-    })
-
-    it('and no specific name is requested', async () => {
-      await expect(dclNameChecker.determineDclNameToUse('0xb', { metadata: {} })).resolves.toBe('bar.dcl.eth')
-    })
-
-    it('and a specific name is requested', async () => {
-      await expect(
-        dclNameChecker.determineDclNameToUse('0xb', {
-          metadata: { worldConfiguration: { dclName: 'foo.dcl.eth' } }
+          ]
         })
-      ).resolves.toBe('foo.dcl.eth')
+      }
     })
 
-    it('and a specific name is requested but it is not an owned one', async () => {
-      await expect(
-        dclNameChecker.determineDclNameToUse('0xb', {
-          metadata: { worldConfiguration: { dclName: 'other.dcl.eth' } }
-        })
-      ).resolves.toBe('bar.dcl.eth')
-    })
+    await expect(dclNameChecker.checkPermission('0xb', 'my-super-name.dcl.eth')).resolves.toBeTruthy()
   })
 })

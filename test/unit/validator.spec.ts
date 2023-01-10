@@ -15,11 +15,11 @@ import {
 } from '../../src/adapters/validator'
 import { MockedStorage } from '@dcl/catalyst-storage/dist/MockedStorage'
 import { IContentStorageComponent } from '@dcl/catalyst-storage'
-import { DeploymentToValidate, IDclNameChecker, ILimitsManager, ValidatorComponents } from '../../src/types'
+import { DeploymentToValidate, IWorldNamePermissionChecker, ILimitsManager, ValidatorComponents } from '../../src/types'
 import { HTTPProvider, stringToUtf8Bytes } from 'eth-connect'
 import { EntityType } from '@dcl/schemas'
 import { createMockLimitsManagerComponent } from '../mocks/limits-manager-mock'
-import { createMockDclNameChecker } from '../mocks/dcl-name-checker-mock'
+import { createMockNamePermissionChecker } from '../mocks/dcl-name-checker-mock'
 import { DeploymentBuilder } from 'dcl-catalyst-client'
 import { getIdentity } from '../utils'
 import { Authenticator, AuthIdentity } from '@dcl/crypto'
@@ -34,7 +34,7 @@ describe('validator', function () {
   let ethereumProvider: HTTPProvider
   let fetch
   let limitsManager: ILimitsManager
-  let dclNameChecker: IDclNameChecker
+  let worldNamePermissionChecker: IWorldNamePermissionChecker
   let identity
   let components: ValidatorComponents
 
@@ -51,7 +51,7 @@ describe('validator', function () {
 
     ethereumProvider = new HTTPProvider('http://localhost', fetch)
     limitsManager = createMockLimitsManagerComponent()
-    dclNameChecker = createMockDclNameChecker(['whatever.dcl.eth'])
+    worldNamePermissionChecker = createMockNamePermissionChecker(['whatever.dcl.eth'])
 
     identity = await getIdentity()
     components = {
@@ -59,7 +59,7 @@ describe('validator', function () {
       storage,
       limitsManager,
       ethereumProvider,
-      dclNameChecker
+      namePermissionChecker: worldNamePermissionChecker
     }
   })
 
@@ -84,6 +84,22 @@ describe('validator', function () {
     expect(result.errors).toContain("must have required property 'type'")
   })
 
+  it('validateEntity with old field dclName', async () => {
+    const deployment = await createDeployment(identity.authChain, {
+      type: EntityType.SCENE,
+      pointers: ['0,0'],
+      timestamp: Date.parse('2022-11-01T00:00:00Z'),
+      metadata: { worldConfiguration: { dclName: 'whatever.dcl.eth' } },
+      files: []
+    })
+
+    const result = await validateEntity.validate(components, deployment)
+    expect(result.ok()).toBeFalsy()
+    expect(result.errors).toContain(
+      '`dclName` in scene.json was renamed to `name`. Please update your scene.json accordingly.'
+    )
+  })
+
   it('validateEntityId with entity id', async () => {
     const deployment = await createDeployment(identity.authChain)
 
@@ -101,7 +117,7 @@ describe('validator', function () {
       type: EntityType.SCENE,
       pointers: ['0,0'],
       timestamp: Date.parse('2022-11-01T00:00:00Z'),
-      metadata: {},
+      metadata: { worldConfiguration: { name: 'whatever.dcl.eth' } },
       files: []
     })
 
@@ -146,20 +162,6 @@ describe('validator', function () {
     )
   })
 
-  it('validateDclName with no dcl name', async () => {
-    const alteredComponents = {
-      ...components,
-      dclNameChecker: createMockDclNameChecker()
-    }
-    const deployment = await createDeployment(identity.authChain)
-
-    const result = await validateDclName.validate(alteredComponents, deployment)
-    expect(result.ok()).toBeFalsy()
-    expect(result.errors).toContain(
-      "Deployment failed: Your wallet has no permission to publish to this server because it doesn't own a Decentraland NAME."
-    )
-  })
-
   it('validateDclName with no ownership of requested dcl name', async () => {
     const deployment = await createDeployment(identity.authChain, {
       type: EntityType.SCENE,
@@ -167,7 +169,7 @@ describe('validator', function () {
       timestamp: Date.now(),
       metadata: {
         worldConfiguration: {
-          dclName: 'different.dcl.eth'
+          name: 'different.dcl.eth'
         }
       },
       files: []
@@ -176,7 +178,7 @@ describe('validator', function () {
     const result = await validateDclName.validate(components, deployment)
     expect(result.ok()).toBeFalsy()
     expect(result.errors).toContain(
-      'Deployment failed: Your wallet has no permission to publish to this server because it doesn\'t own Decentraland NAME "different.dcl.eth". Check scene.json to select a different name.'
+      'Deployment failed: Your wallet has no permission to publish this scene because it does not have permission to deploy under "different.dcl.eth". Check scene.json to select a name you own.'
     )
   })
 
@@ -185,7 +187,11 @@ describe('validator', function () {
       type: EntityType.SCENE,
       pointers: ['0,0', '0,1', '1,0', '1,1', '1,2'],
       timestamp: Date.now(),
-      metadata: {},
+      metadata: {
+        worldConfiguration: {
+          name: 'whatever.dcl.eth'
+        }
+      },
       files: []
     })
 
@@ -236,7 +242,11 @@ describe('validator', function () {
       type: EntityType.SCENE,
       pointers: ['0,0'],
       timestamp: Date.now(),
-      metadata: {},
+      metadata: {
+        worldConfiguration: {
+          name: 'whatever.dcl.eth'
+        }
+      },
       files: entityFiles
     })
 
@@ -257,7 +267,10 @@ describe('validator', function () {
       pointers: ['0,0'],
       timestamp: Date.now(),
       metadata: {
-        runtimeVersion: '6'
+        runtimeVersion: '6',
+        worldConfiguration: {
+          name: 'whatever.dcl.eth'
+        }
       },
       files: []
     })
@@ -279,7 +292,7 @@ async function createDeployment(identityAuthChain: AuthIdentity, entity?: any) {
     type: EntityType.SCENE,
     pointers: ['0,0'],
     timestamp: Date.now(),
-    metadata: { runtimeVersion: '7' },
+    metadata: { runtimeVersion: '7', worldConfiguration: { name: 'whatever.dcl.eth' } },
     files: entityFiles
   }
   const { files, entityId } = await DeploymentBuilder.buildEntity(sceneJson)

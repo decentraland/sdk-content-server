@@ -1,4 +1,4 @@
-import { AppComponents, IDclNameChecker } from '../types'
+import { AppComponents, IWorldNamePermissionChecker } from '../types'
 import { EthAddress } from '@dcl/schemas'
 import LRU from 'lru-cache'
 
@@ -8,7 +8,7 @@ type NamesResponse = {
 
 export const createDclNameChecker = (
   components: Pick<AppComponents, 'logs' | 'marketplaceSubGraph'>
-): IDclNameChecker => {
+): IWorldNamePermissionChecker => {
   const cache = new LRU<EthAddress, string[]>({
     max: 100,
     ttl: 5 * 60 * 1000, // cache for 5 minutes
@@ -31,23 +31,17 @@ export const createDclNameChecker = (
       return names
     }
   })
-  const fetchNamesOwnedByAddress = async (ethAddress: EthAddress): Promise<string[]> => {
-    // TheGraph only responds to lower cased addresses
-    return (await cache.fetch(ethAddress.toLowerCase()))!
-  }
-  const determineDclNameToUse = async (ethAddress: EthAddress, sceneJson: any): Promise<string | undefined> => {
-    const names = await fetchNamesOwnedByAddress(ethAddress)
-    const requestedName = sceneJson.metadata.worldConfiguration?.dclName
 
-    if (requestedName && names.includes(requestedName)) {
-      return requestedName
+  const checkPermission = async (ethAddress: EthAddress, worldName: string): Promise<boolean> => {
+    if (worldName.length === 0) {
+      return false
     }
 
-    return names[0]
+    const names = (await cache.fetch(ethAddress.toLowerCase()))!
+    return names.includes(worldName.toLowerCase())
   }
 
   return {
-    fetchNamesOwnedByAddress,
-    determineDclNameToUse
+    checkPermission
   }
 }

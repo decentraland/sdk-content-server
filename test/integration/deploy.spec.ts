@@ -10,61 +10,7 @@ import { getIdentity } from '../utils'
 test('deployment works', function ({ components, stubComponents }) {
   it('creates an entity and deploys it', async () => {
     const { config, storage } = components
-    const { dclNameChecker, metrics } = stubComponents
-
-    const contentClient = new ContentClient({
-      contentUrl: `http://${await config.requireString('HTTP_SERVER_HOST')}:${await config.requireNumber(
-        'HTTP_SERVER_PORT'
-      )}`
-    })
-
-    const entityFiles = new Map<string, Uint8Array>()
-    entityFiles.set('abc.txt', stringToUtf8Bytes('asd'))
-    const fileHash = await hashV1(entityFiles.get('abc.txt'))
-
-    expect(await storage.exist(fileHash)).toEqual(false)
-
-    // Build the entity
-    const { files, entityId } = await contentClient.buildEntity({
-      type: EntityType.SCENE,
-      pointers: ['0,0'],
-      files: entityFiles,
-      metadata: {}
-    })
-
-    // Sign entity id
-    const identity = await getIdentity()
-
-    dclNameChecker.fetchNamesOwnedByAddress
-      .withArgs(identity.authChain.authChain[0].payload)
-      .resolves(['my-super-name.dcl.eth'])
-    dclNameChecker.determineDclNameToUse
-      .withArgs(identity.authChain.authChain[0].payload, Sinon.match.any)
-      .resolves('my-super-name.dcl.eth')
-
-    const authChain = Authenticator.signPayload(identity.authChain, entityId)
-
-    // Deploy entity
-    await contentClient.deployEntity({ files, entityId, authChain })
-
-    Sinon.assert.calledWith(dclNameChecker.fetchNamesOwnedByAddress, identity.authChain.authChain[0].payload)
-    Sinon.assert.calledWith(
-      dclNameChecker.determineDclNameToUse,
-      identity.authChain.authChain[0].payload,
-      Sinon.match.any
-    )
-
-    expect(await storage.exist(fileHash)).toEqual(true)
-    expect(await storage.exist(entityId)).toEqual(true)
-
-    Sinon.assert.calledWithMatch(metrics.increment, 'world_deployments_counter')
-  })
-})
-
-test('deployment works', function ({ components, stubComponents }) {
-  it('creates an entity and deploys it using specified name', async () => {
-    const { config, storage } = components
-    const { dclNameChecker, metrics } = stubComponents
+    const { namePermissionChecker, metrics } = stubComponents
 
     const contentClient = new ContentClient({
       contentUrl: `http://${await config.requireString('HTTP_SERVER_HOST')}:${await config.requireNumber(
@@ -85,7 +31,7 @@ test('deployment works', function ({ components, stubComponents }) {
       files: entityFiles,
       metadata: {
         worldConfiguration: {
-          dclName: 'just-do-it.dcl.eth'
+          name: 'my-super-name.dcl.eth'
         }
       }
     })
@@ -93,23 +39,19 @@ test('deployment works', function ({ components, stubComponents }) {
     // Sign entity id
     const identity = await getIdentity()
 
-    dclNameChecker.fetchNamesOwnedByAddress
-      .withArgs(identity.authChain.authChain[0].payload)
-      .resolves(['my-super-name.dcl.eth', 'just-do-it.dcl.eth'])
-    dclNameChecker.determineDclNameToUse
-      .withArgs(identity.authChain.authChain[0].payload, Sinon.match.any)
-      .resolves('just-do-it.dcl.eth')
+    namePermissionChecker.checkPermission
+      .withArgs(identity.authChain.authChain[0].payload, 'my-super-name.dcl.eth')
+      .resolves(true)
 
     const authChain = Authenticator.signPayload(identity.authChain, entityId)
 
     // Deploy entity
     await contentClient.deployEntity({ files, entityId, authChain })
 
-    Sinon.assert.calledWith(dclNameChecker.fetchNamesOwnedByAddress, identity.authChain.authChain[0].payload)
     Sinon.assert.calledWith(
-      dclNameChecker.determineDclNameToUse,
+      namePermissionChecker.checkPermission,
       identity.authChain.authChain[0].payload,
-      Sinon.match.any
+      'my-super-name.dcl.eth'
     )
 
     expect(await storage.exist(fileHash)).toEqual(true)
@@ -122,7 +64,7 @@ test('deployment works', function ({ components, stubComponents }) {
 test('deployment with failed validation', function ({ components, stubComponents }) {
   it('does not work because user does not own requested name', async () => {
     const { config, storage } = components
-    const { dclNameChecker, metrics } = stubComponents
+    const { namePermissionChecker, metrics } = stubComponents
 
     const contentClient = new ContentClient({
       contentUrl: `http://${await config.requireString('HTTP_SERVER_HOST')}:${await config.requireNumber(
@@ -143,7 +85,7 @@ test('deployment with failed validation', function ({ components, stubComponents
       files: entityFiles,
       metadata: {
         worldConfiguration: {
-          dclName: 'just-do-it.dcl.eth'
+          name: 'just-do-it.dcl.eth'
         }
       }
     })
@@ -151,22 +93,21 @@ test('deployment with failed validation', function ({ components, stubComponents
     // Sign entity id
     const identity = await getIdentity()
 
-    dclNameChecker.fetchNamesOwnedByAddress
-      .withArgs(identity.authChain.authChain[0].payload)
-      .resolves(['my-super-name.dcl.eth'])
+    namePermissionChecker.checkPermission
+      .withArgs(identity.authChain.authChain[0].payload, 'just-do-it.dcl.eth')
+      .resolves(false)
 
     const authChain = Authenticator.signPayload(identity.authChain, entityId)
 
     // Deploy entity
     await expect(() => contentClient.deployEntity({ files, entityId, authChain })).rejects.toThrow(
-      'Your wallet has no permission to publish to this server because it doesn\'t own Decentraland NAME "just-do-it.dcl.eth".'
+      'Your wallet has no permission to publish this scene because it does not have permission to deploy under "just-do-it.dcl.eth". Check scene.json to select a name you own.'
     )
 
-    Sinon.assert.calledWith(dclNameChecker.fetchNamesOwnedByAddress, identity.authChain.authChain[0].payload)
     Sinon.assert.calledWith(
-      dclNameChecker.determineDclNameToUse,
+      namePermissionChecker.checkPermission,
       identity.authChain.authChain[0].payload,
-      Sinon.match.any
+      'just-do-it.dcl.eth'
     )
 
     expect(await storage.exist(fileHash)).toEqual(false)
@@ -177,9 +118,9 @@ test('deployment with failed validation', function ({ components, stubComponents
 })
 
 test('deployment with failed validation', function ({ components, stubComponents }) {
-  it('does not work because user does not own any names', async () => {
+  it('does not work because user did not specify any names', async () => {
     const { config, storage } = components
-    const { dclNameChecker, metrics } = stubComponents
+    const { namePermissionChecker, metrics } = stubComponents
 
     const contentClient = new ContentClient({
       contentUrl: `http://${await config.requireString('HTTP_SERVER_HOST')}:${await config.requireNumber(
@@ -204,21 +145,18 @@ test('deployment with failed validation', function ({ components, stubComponents
     // Sign entity id
     const identity = await getIdentity()
 
-    dclNameChecker.fetchNamesOwnedByAddress.withArgs(identity.authChain.authChain[0].payload).resolves([])
+    namePermissionChecker.checkPermission
+      .withArgs(identity.authChain.authChain[0].payload, 'my-super-name.dcl.eth')
+      .resolves(false)
 
     const authChain = Authenticator.signPayload(identity.authChain, entityId)
 
     // Deploy entity
     await expect(() => contentClient.deployEntity({ files, entityId, authChain })).rejects.toThrow(
-      "Your wallet has no permission to publish to this server because it doesn't own a Decentraland NAME."
+      'Deployment failed: scene.json needs to specify a worldConfiguration section with a valid name inside.'
     )
 
-    Sinon.assert.calledWith(dclNameChecker.fetchNamesOwnedByAddress, identity.authChain.authChain[0].payload)
-    Sinon.assert.calledWith(
-      dclNameChecker.determineDclNameToUse,
-      identity.authChain.authChain[0].payload,
-      Sinon.match.any
-    )
+    Sinon.assert.notCalled(namePermissionChecker.checkPermission)
 
     expect(await storage.exist(fileHash)).toEqual(false)
     expect(await storage.exist(entityId)).toEqual(false)
