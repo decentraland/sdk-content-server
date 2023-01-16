@@ -1,10 +1,12 @@
 import { createConfigComponent } from '@well-known-components/env-config-provider'
 import { Variables } from '@well-known-components/thegraph-component/dist/types'
-import { createDclNameChecker } from '../../src/adapters/dcl-name-checker'
+import { createDclNameChecker, createOnChainDclNameChecker } from '../../src/adapters/dcl-name-checker'
 import { createLogComponent } from '@well-known-components/logger'
-import { ILoggerComponent } from '@well-known-components/interfaces'
+import { IConfigComponent, ILoggerComponent } from '@well-known-components/interfaces'
+import { getIdentity } from '../utils'
+import { createHttpProviderMock } from '../mocks/http-provider-mock'
 
-describe('dcl name checker', function () {
+describe('dcl name checker: TheGraph', function () {
   let logs: ILoggerComponent
 
   beforeEach(async () => {
@@ -56,5 +58,60 @@ describe('dcl name checker', function () {
     })
 
     await expect(dclNameChecker.checkPermission('0xb', 'my-super-name.dcl.eth')).resolves.toBeTruthy()
+  })
+})
+
+describe('dcl name checker: on-chain', function () {
+  let logs: ILoggerComponent
+  let config: IConfigComponent
+
+  beforeEach(async () => {
+    config = createConfigComponent({
+      NETWORK_ID: '1',
+      LOG_LEVEL: 'DEBUG'
+    })
+    logs = await createLogComponent({ config })
+  })
+
+  it.each(['', 'name'])('when permission asked for invalid name returns false', async (name) => {
+    const dclNameChecker = await createOnChainDclNameChecker({
+      config,
+      logs,
+      ethereumProvider: createHttpProviderMock()
+    })
+
+    await expect(dclNameChecker.checkPermission('0xb', name)).resolves.toBeFalsy()
+  })
+
+  it('when on chain validation returns false', async () => {
+    const dclNameChecker = await createOnChainDclNameChecker({
+      config,
+      logs,
+      ethereumProvider: createHttpProviderMock({
+        jsonrpc: '2.0',
+        id: 1,
+        result: '0x0000000000000000000000000000000000000000000000000000000000000000'
+      })
+    })
+
+    const identity = await getIdentity()
+    const address = identity.authChain.authChain[0].payload
+    await expect(dclNameChecker.checkPermission(address, 'my-super-name.dcl.eth')).resolves.toBeFalsy()
+  })
+
+  it('when on chain validation returns true', async () => {
+    const dclNameChecker = await createOnChainDclNameChecker({
+      config,
+      logs,
+      ethereumProvider: createHttpProviderMock({
+        jsonrpc: '2.0',
+        id: 1,
+        result: '0x0000000000000000000000000000000000000000000000000000000000000001'
+      })
+    })
+
+    const identity = await getIdentity()
+    const address = identity.authChain.authChain[0].payload
+    await expect(dclNameChecker.checkPermission(address, 'my-super-name.dcl.eth')).resolves.toBeTruthy()
   })
 })
