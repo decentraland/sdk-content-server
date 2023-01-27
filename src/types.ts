@@ -50,6 +50,10 @@ export type IWorldNamePermissionChecker = {
   checkPermission(ethAddress: EthAddress, worldName: string): Promise<boolean>
 }
 
+export type ICommsResolver = {
+  resolveComms(ethAddress: EthAddress, roomId: string): Promise<string>
+}
+
 export type ILimitsManager = {
   getAllowSdk6For(worldName: string): Promise<boolean>
   getMaxAllowedParcelsFor(worldName: string): Promise<number>
@@ -63,6 +67,7 @@ export type IWorldsManager = {
 
 // components used in every environment
 export type BaseComponents = {
+  commsResolver: ICommsResolver
   config: IConfigComponent
   namePermissionChecker: IWorldNamePermissionChecker
   logs: ILoggerComponent

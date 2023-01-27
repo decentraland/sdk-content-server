@@ -32,13 +32,13 @@ test('world about handler /world/:world_name/about', function ({ components }) {
         skybox: {},
         realmName: 'some-name.dcl.eth'
       },
-      content: { healthy: true, publicUrl: 'https://peer.decentraland.org/content' },
-      lambdas: { healthy: true, publicUrl: 'https://peer.decentraland.org/lambdas' },
+      content: { healthy: true, publicUrl: 'https://peer.com/content' },
+      lambdas: { healthy: true, publicUrl: 'https://peer.com/lambdas' },
       comms: {
         healthy: true,
         protocol: 'v3',
         fixedAdapter:
-          'ws-room:ws-room-service.decentraland.org/rooms/bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y'
+          'signed-login:https://0.0.0.0:3000/get-comms-adapter/bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y'
       }
     })
   })

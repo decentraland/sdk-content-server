@@ -13,6 +13,7 @@ import { createValidator } from '../src/adapters/validator'
 import { createFetchComponent } from '../src/adapters/fetch'
 import { createMockLimitsManagerComponent } from './mocks/limits-manager-mock'
 import { createWorldsManagerComponent } from '../src/adapters/worlds-manager'
+import { createMockStatusComponent } from './mocks/status-mock'
 
 /**
  * Behaves like Jest "describe" function, used to describe a test for a
@@ -46,16 +47,19 @@ async function initComponents(): Promise<TestComponents> {
     limitsManager,
     ethereumProvider: components.ethereumProvider
   })
+  const status = createMockStatusComponent()
 
   const worldsManager = await createWorldsManagerComponent({ storage, logs })
   return {
     ...components,
+
     localFetch: await createLocalFetchCompoment(config),
     marketplaceSubGraph: createMockMarketplaceSubGraph(),
     namePermissionChecker: namePermissionChecker,
     fetch,
     limitsManager,
     validator,
+    status,
     storage,
     worldsManager
   }

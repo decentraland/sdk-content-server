@@ -96,8 +96,8 @@ test('consume about endpoint', function ({ components }) {
         minimap: { enabled: true },
         skybox: {}
       },
-      content: { healthy: true, publicUrl: 'https://peer.decentraland.org/content' },
-      lambdas: { healthy: true, publicUrl: 'https://peer.decentraland.org/lambdas' },
+      content: { healthy: true, publicUrl: 'https://peer.com/content' },
+      lambdas: { healthy: true, publicUrl: 'https://peer.com/lambdas' },
       comms: {
         fixedAdapter: 'ws-room:ws-room-service.decentraland.org/rooms/test-scene',
         healthy: true,
