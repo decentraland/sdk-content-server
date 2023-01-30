@@ -50,9 +50,9 @@ async function initComponents(): Promise<TestComponents> {
   const status = createMockStatusComponent()
 
   const worldsManager = await createWorldsManagerComponent({ storage, logs })
+
   return {
     ...components,
-
     localFetch: await createLocalFetchCompoment(config),
     marketplaceSubGraph: createMockMarketplaceSubGraph(),
     namePermissionChecker: namePermissionChecker,

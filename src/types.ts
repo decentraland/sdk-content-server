@@ -63,6 +63,7 @@ export type ILimitsManager = {
 export type IWorldsManager = {
   getDeployedWorldsNames(): Promise<string[]>
   getDeployedWorldsCount(): Promise<number>
+  getEntityIdForWorld(worldName: string): Promise<string | undefined>
 }
 
 // components used in every environment

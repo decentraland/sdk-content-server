@@ -1,11 +1,13 @@
 import { HandlerContextWithPath } from '../../types'
 import { IHttpServerComponent } from '@well-known-components/interfaces'
 import { DecentralandSignatureContext } from 'decentraland-crypto-middleware/lib/types'
+
 export async function commsAdapterHandler(
-  context: HandlerContextWithPath<'commsResolver', '/get-comms-adapter/:roomId'> & DecentralandSignatureContext<any>
+  context: HandlerContextWithPath<'commsResolver' | 'storage', '/get-comms-adapter/:roomId'> &
+    DecentralandSignatureContext<any>
 ): Promise<IHttpServerComponent.IResponse> {
   const {
-    components: { commsResolver }
+    components: { commsResolver, storage }
   } = context
 
   if (!validateMetadata(context.verification!.authMetadata)) {
@@ -13,6 +15,15 @@ export async function commsAdapterHandler(
       status: 400,
       body: {
         message: 'Access denied, invalid metadata'
+      }
+    }
+  }
+
+  if (!(await storage.exist(context.params.roomId))) {
+    return {
+      status: 404,
+      body: {
+        message: `Room id "${context.params.roomId}" does not exist.`
       }
     }
   }

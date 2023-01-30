@@ -10,22 +10,18 @@ import { IConfigComponent } from '@well-known-components/interfaces'
 export async function dclNameAboutHandler({
   params,
   url,
-  components: { config, status, storage }
+  components: { config, status, storage, worldsManager }
 }: Pick<
-  HandlerContextWithPath<'config' | 'status' | 'storage', '/world/:world_name/about'>,
+  HandlerContextWithPath<'config' | 'status' | 'storage' | 'worldsManager', '/world/:world_name/about'>,
   'components' | 'params' | 'url'
 >) {
-  // Retrieve
-  const content = await storage.retrieve(`name-${params.world_name.toLowerCase()}`)
-  if (!content) {
+  const entityId = await worldsManager.getEntityIdForWorld(params.world_name)
+  if (!entityId) {
     return {
       status: 404,
       body: `World "${params.world_name}" has no scene deployed.`
     }
   }
-
-  const buffer = await streamToBuffer(await content?.asStream())
-  const { entityId } = JSON.parse(buffer.toString())
 
   const scene = await storage.retrieve(entityId)
   if (!scene) {

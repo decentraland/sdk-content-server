@@ -97,6 +97,7 @@ export async function initComponents(): Promise<AppComponents> {
   })
 
   const worldsManager = await createWorldsManagerComponent({ logs, storage })
+
   return {
     commsResolver,
     config,

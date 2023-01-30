@@ -1,5 +1,6 @@
 import { AppComponents, IWorldsManager } from '../types'
 import LRU from 'lru-cache'
+import { streamToBuffer } from '@dcl/catalyst-storage/dist/content-item'
 
 export async function createWorldsManagerComponent({
   storage,
@@ -7,7 +8,7 @@ export async function createWorldsManagerComponent({
 }: Pick<AppComponents, 'storage' | 'logs'>): Promise<IWorldsManager> {
   const logger = logs.getLogger('worlds-manager')
   const WORLDS_KEY = 'worlds'
-  const cache = new LRU<any, string[]>({
+  const cache = new LRU<string, string[]>({
     max: 1,
     ttl: 10 * 60 * 1000, // cache for 10 minutes
     fetchMethod: async (_, staleValue): Promise<string[]> => {
@@ -32,8 +33,21 @@ export async function createWorldsManagerComponent({
     return (await cache.fetch(WORLDS_KEY))?.length || 0
   }
 
+  async function getEntityIdForWorld(worldName: string): Promise<string | undefined> {
+    const content = await storage.retrieve(`name-${worldName.toLowerCase()}`)
+    if (!content) {
+      return undefined
+    }
+
+    const buffer = await streamToBuffer(await content?.asStream())
+    const { entityId } = JSON.parse(buffer.toString())
+
+    return entityId
+  }
+
   return {
     getDeployedWorldsNames,
-    getDeployedWorldsCount
+    getDeployedWorldsCount,
+    getEntityIdForWorld
   }
 }
