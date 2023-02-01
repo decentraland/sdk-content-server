@@ -8,7 +8,6 @@ import type {
 } from '@well-known-components/interfaces'
 import { metricDeclarations } from './metrics'
 import { IContentStorageComponent } from '@dcl/catalyst-storage'
-import { MockedStorage } from '@dcl/catalyst-storage/dist/MockedStorage'
 import { HTTPProvider } from 'eth-connect'
 import { ISubgraphComponent } from '@well-known-components/thegraph-component'
 import { IStatusComponent } from './adapters/status'
@@ -96,7 +95,6 @@ export type AppComponents = BaseComponents & {
 export type TestComponents = BaseComponents & {
   // A fetch component that only hits the test server
   localFetch: IFetchComponent
-  storage: MockedStorage
 }
 
 // this type simplifies the typings of http handlers

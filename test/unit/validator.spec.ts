@@ -13,8 +13,7 @@ import {
   validateSigner,
   validateSize
 } from '../../src/adapters/validator'
-import { MockedStorage } from '@dcl/catalyst-storage/dist/MockedStorage'
-import { IContentStorageComponent } from '@dcl/catalyst-storage'
+import { createInMemoryStorage, IContentStorageComponent } from '@dcl/catalyst-storage'
 import { DeploymentToValidate, IWorldNamePermissionChecker, ILimitsManager, ValidatorComponents } from '../../src/types'
 import { HTTPProvider, stringToUtf8Bytes } from 'eth-connect'
 import { EntityType } from '@dcl/schemas'
@@ -39,10 +38,10 @@ describe('validator', function () {
   let components: ValidatorComponents
 
   beforeEach(async () => {
-    config = await createConfigComponent({
+    config = createConfigComponent({
       DEPLOYMENT_TTL: '10000'
     })
-    storage = new MockedStorage()
+    storage = createInMemoryStorage()
     fetch = {
       fetch: (_url: string, _params: { body?: any; method?: string; mode?: string; headers?: any }): Promise<any> => {
         return Promise.resolve({})

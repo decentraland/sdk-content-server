@@ -1,5 +1,6 @@
 {
   "name": "template-server",
+  "license": "Apache-2.0",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "build:watch": "tsc -p tsconfig.json --watch",
@@ -26,10 +27,9 @@
   "prettier": {
     "printWidth": 120,
     "semi": false,
-    "singleQuote": true
-  },
-  "config": {
-    "protocVersion": "21.6"
+    "singleQuote": true,
+    "trailingComma": "none",
+    "tabWidth": 2
   },
   "dependencies": {
     "@dcl/catalyst-contracts": "^3.1.3",

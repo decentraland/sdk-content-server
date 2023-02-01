@@ -1,4 +1,6 @@
-coverage/
+test/
 dist/
-node_modules/
-jest.config.js
+*.js
+*.d.ts
+*.json
+src/index.ts

@@ -1,27 +1,20 @@
 import { test } from '../components'
-import { stringToUtf8Bytes } from 'eth-connect'
+import { storeJson } from '../utils'
 
 test('world about handler /world/:world_name/about', function ({ components }) {
   it('when world exists it responds', async () => {
     const { localFetch, storage } = components
 
-    storage.storage.set(
-      'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y',
-      stringToUtf8Bytes(
-        JSON.stringify({
-          metadata: {}
-        })
-      )
-    )
-    storage.storage.set(
-      'name-some-name.dcl.eth',
-      stringToUtf8Bytes(JSON.stringify({ entityId: 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y' }))
-    )
+    storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', { metadata: {} })
+    storeJson(storage, 'name-some-name.dcl.eth', {
+      entityId: 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y'
+    })
 
     const r = await localFetch.fetch('/world/some-name.dcl.eth/about')
     expect(r.status).toEqual(200)
     expect(await r.json()).toEqual({
       healthy: true,
+      acceptingUsers: true,
       configurations: {
         networkId: 5,
         globalScenesUrn: [],
@@ -47,22 +40,16 @@ test('world about handler /world/:world_name/about', function ({ components }) {
   it('when world exists and has minimap it responds', async () => {
     const { localFetch, storage } = components
 
-    storage.storage.set(
-      'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y',
-      stringToUtf8Bytes(
-        JSON.stringify({
-          metadata: {
-            worldConfiguration: {
-              minimapVisible: true
-            }
-          }
-        })
-      )
-    )
-    storage.storage.set(
-      'name-some-name.dcl.eth',
-      stringToUtf8Bytes(JSON.stringify({ entityId: 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y' }))
-    )
+    storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', {
+      metadata: {
+        worldConfiguration: {
+          minimapVisible: true
+        }
+      }
+    })
+    storeJson(storage, 'name-some-name.dcl.eth', {
+      entityId: 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y'
+    })
 
     const r = await localFetch.fetch('/world/some-name.dcl.eth/about')
     expect(r.status).toEqual(200)
@@ -82,22 +69,16 @@ test('world about handler /world/:world_name/about', function ({ components }) {
   it('when world exists and uses offline comms', async () => {
     const { localFetch, storage } = components
 
-    storage.storage.set(
-      'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y',
-      stringToUtf8Bytes(
-        JSON.stringify({
-          metadata: {
-            worldConfiguration: {
-              fixedAdapter: 'offline:offline'
-            }
-          }
-        })
-      )
-    )
-    storage.storage.set(
-      'name-some-name.dcl.eth',
-      stringToUtf8Bytes(JSON.stringify({ entityId: 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y' }))
-    )
+    storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', {
+      metadata: {
+        worldConfiguration: {
+          fixedAdapter: 'offline:offline'
+        }
+      }
+    })
+    storeJson(storage, 'name-some-name.dcl.eth', {
+      entityId: 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y'
+    })
 
     const r = await localFetch.fetch('/world/some-name.dcl.eth/about')
     expect(r.status).toEqual(200)
@@ -125,10 +106,9 @@ test('world about handler /world/:world_name/about', function ({ components }) {
   it('when world exists but the scene does not, it responds with 404', async () => {
     const { localFetch, storage } = components
 
-    storage.storage.set(
-      'name-some-name.dcl.eth',
-      stringToUtf8Bytes(JSON.stringify({ entityId: 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y' }))
-    )
+    storeJson(storage, 'name-some-name.dcl.eth', {
+      entityId: 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y'
+    })
 
     const r = await localFetch.fetch('/world/some-name.dcl.eth/about')
     expect(r.status).toEqual(404)

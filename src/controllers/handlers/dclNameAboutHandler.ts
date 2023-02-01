@@ -3,7 +3,7 @@ import {
   AboutResponse,
   AboutResponse_MinimapConfiguration,
   AboutResponse_SkyboxConfiguration
-} from '../../proto/http-endpoints.gen'
+} from '@dcl/protocol/out-js/decentraland/bff/http_endpoints.gen'
 import { streamToBuffer } from '@dcl/catalyst-storage/dist/content-item'
 import { IConfigComponent } from '@well-known-components/interfaces'
 
@@ -58,8 +58,10 @@ export async function dclNameAboutHandler({
     fixedHour: sceneJson.metadata.worldConfiguration?.skybox
   }
 
+  const healthy = contentStatus.healthy && lambdasStatus.healthy
   const body: AboutResponse = {
-    healthy: contentStatus.healthy && lambdasStatus.healthy,
+    healthy,
+    acceptingUsers: healthy,
     configurations: {
       networkId,
       globalScenesUrn: globalScenesURN ? globalScenesURN.split(' ') : [],

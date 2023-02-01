@@ -1,5 +1,5 @@
 import { test } from '../components'
-import { stringToUtf8Bytes } from 'eth-connect'
+import { storeJson } from '../utils'
 
 test('consume content endpoints', function ({ components }) {
   it('responds /ipfs/:cid and works', async () => {
@@ -10,12 +10,12 @@ test('consume content endpoints', function ({ components }) {
       expect(r.status).toEqual(404)
     }
 
-    storage.storage.set('bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', stringToUtf8Bytes('Hola'))
+    await storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', 'Hola')
 
     {
       const r = await localFetch.fetch('/ipfs/bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y')
       expect(r.status).toEqual(200)
-      expect(await r.text()).toEqual('Hola')
+      expect(await r.text()).toEqual('"Hola"')
     }
   })
 })
@@ -31,8 +31,7 @@ test('consume content endpoints', function ({ components }) {
       expect(r.status).toEqual(404)
     }
 
-    storage.storage.set('bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', stringToUtf8Bytes('Hola'))
-
+    await storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', 'Hola')
     {
       const r = await localFetch.fetch('/ipfs/bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', {
         method: 'HEAD'
@@ -47,10 +46,9 @@ test('consume status endpoint', function ({ components }) {
   it('responds /status works', async () => {
     const { localFetch, storage } = components
 
-    storage.storage.set(
-      'name-some-name.dcl.eth',
-      stringToUtf8Bytes(JSON.stringify({ entityId: 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y' }))
-    )
+    await storeJson(storage, 'name-some-name.dcl.eth', {
+      entityId: 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y'
+    })
 
     {
       // Without authentication deployedWorlds is not retrieved
@@ -89,6 +87,7 @@ test('consume about endpoint', function ({ components }) {
     expect(r.status).toEqual(200)
     expect(await r.json()).toMatchObject({
       healthy: true,
+      acceptingUsers: true,
       configurations: {
         networkId: 5,
         globalScenesUrn: [],

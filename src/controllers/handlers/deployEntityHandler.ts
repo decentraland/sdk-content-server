@@ -25,7 +25,7 @@ export function extractAuthChain(ctx: FormDataContext): AuthChain {
     }
   }
 
-  if (biggestIndex == -1) throw new Error('Missing auth chain')
+  if (biggestIndex === -1) throw new Error('Missing auth chain')
   // fill all the authchain
   for (let i = 0; i <= biggestIndex; i++) {
     ret.push({
@@ -51,7 +51,7 @@ async function storeEntity(
   // store all files
   for (const file of entity.content!) {
     if (!allContentHashesInStorage.get(file.hash)) {
-      const filename = entity.content!.find(($) => $.hash == file.hash)
+      const filename = entity.content!.find(($) => $.hash === file.hash)
       logger.info(`Storing file`, { cid: file.hash, filename: filename?.file || 'unknown' })
       await storage.storeStream(file.hash, bufferToStream(files.get(file.hash)!))
       allContentHashesInStorage.set(file.hash, true)

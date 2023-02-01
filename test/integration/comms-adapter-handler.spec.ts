@@ -7,7 +7,7 @@ import {
 import { AuthChain } from '@dcl/schemas'
 import { Authenticator } from '@dcl/crypto'
 import { getIdentity } from '../utils'
-import { stringToUtf8Bytes } from 'eth-connect'
+import { storeJson } from '../utils'
 
 test('comms adapter handler /get-comms-adapter/:roomId', function ({ components }) {
   it('works when signed-fetch request is correct', async () => {
@@ -15,7 +15,7 @@ test('comms adapter handler /get-comms-adapter/:roomId', function ({ components 
 
     const identity = await getIdentity()
 
-    storage.storage.set('name-myRoom', stringToUtf8Bytes(''))
+    await storeJson(storage, 'name-myRoom', '')
 
     const path = '/get-comms-adapter/world-myRoom'
     const actualInit = {
