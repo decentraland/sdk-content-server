@@ -37,7 +37,7 @@ export async function dclNameAboutHandler({
   const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}/ipfs/`
 
   const networkId = await config.requireNumber('NETWORK_ID')
-  const fixedAdapter = await resolveFixedAdapter(config, entityId, sceneJson, baseUrl)
+  const fixedAdapter = await resolveFixedAdapter(config, params.world_name, sceneJson, baseUrl)
 
   const globalScenesURN = await config.getString('GLOBAL_SCENES_URN')
 
@@ -88,10 +88,10 @@ export async function dclNameAboutHandler({
   }
 }
 
-async function resolveFixedAdapter(config: IConfigComponent, entityId: string, sceneJson: any, baseUrl: string) {
+async function resolveFixedAdapter(config: IConfigComponent, worldName: string, sceneJson: any, baseUrl: string) {
   if (sceneJson.metadata.worldConfiguration?.fixedAdapter === 'offline:offline') {
     return 'offline:offline'
   }
 
-  return `signed-login:${baseUrl}/get-comms-adapter/${entityId}`
+  return `signed-login:${baseUrl}/get-comms-adapter/w-${worldName.toLowerCase()}`
 }

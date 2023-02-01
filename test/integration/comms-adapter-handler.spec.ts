@@ -15,9 +15,9 @@ test('comms adapter handler /get-comms-adapter/:roomId', function ({ components 
 
     const identity = await getIdentity()
 
-    storage.storage.set('myRoom', stringToUtf8Bytes(''))
+    storage.storage.set('name-myRoom', stringToUtf8Bytes(''))
 
-    const path = '/get-comms-adapter/myRoom'
+    const path = '/get-comms-adapter/w-myRoom'
     const actualInit = {
       method: 'POST',
       headers: {
@@ -47,13 +47,52 @@ test('comms adapter handler /get-comms-adapter/:roomId', function ({ components 
 
     expect(r.status).toEqual(200)
     expect(await r.json()).toEqual({
-      fixedAdapter: 'ws-room:ws-room-service.decentraland.org/rooms/myRoom'
+      fixedAdapter: 'ws-room:ws-room-service.decentraland.org/rooms/w-myRoom'
     })
   })
 })
 
 test('comms adapter handler /get-comms-adapter/:roomId', function ({ components }) {
   it('fails when signed-fetch request metadata is correct but room id does not exist', async () => {
+    const { localFetch } = components
+
+    const identity = await getIdentity()
+
+    const path = '/get-comms-adapter/w-myRoom'
+    const actualInit = {
+      method: 'POST',
+      headers: {
+        ...getAuthHeaders(
+          'post',
+          path,
+          {
+            origin: 'https://play.decentraland.org',
+            intent: 'dcl:explorer:comms-handshake',
+            signer: 'dcl:explorer',
+            isGuest: 'false'
+          },
+          (payload) =>
+            Authenticator.signPayload(
+              {
+                ephemeralIdentity: identity.ephemeralIdentity,
+                expiration: new Date(),
+                authChain: identity.authChain.authChain
+              },
+              payload
+            )
+        )
+      }
+    }
+
+    const r = await localFetch.fetch(path, actualInit)
+
+    expect(r.status).toEqual(404)
+    expect(await r.json()).toEqual({ message: 'World "myRoom" does not exist.' })
+  })
+})
+
+test('comms adapter handler /get-comms-adapter/:roomId', function ({ components }) {
+  it('fails when signed-fetch request metadata is correct but room id is invalid', async () => {
     const { localFetch } = components
 
     const identity = await getIdentity()
@@ -86,8 +125,8 @@ test('comms adapter handler /get-comms-adapter/:roomId', function ({ components 
 
     const r = await localFetch.fetch(path, actualInit)
 
-    expect(r.status).toEqual(404)
-    expect(await r.json()).toEqual({ message: 'Room id "myRoom" does not exist.' })
+    expect(r.status).toEqual(400)
+    expect(await r.json()).toEqual({ message: 'Invalid room id requested.' })
   })
 })
 

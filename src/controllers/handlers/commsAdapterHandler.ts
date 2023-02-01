@@ -19,11 +19,22 @@ export async function commsAdapterHandler(
     }
   }
 
-  if (!(await storage.exist(context.params.roomId))) {
+  if (!context.params.roomId.startsWith('w-')) {
+    return {
+      status: 400,
+      body: {
+        message: 'Invalid room id requested.'
+      }
+    }
+  }
+
+  const worldName = context.params.roomId.substring(2)
+
+  if (!(await storage.exist('name-' + worldName))) {
     return {
       status: 404,
       body: {
-        message: `Room id "${context.params.roomId}" does not exist.`
+        message: `World "${worldName}" does not exist.`
       }
     }
   }
