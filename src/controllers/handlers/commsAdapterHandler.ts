@@ -3,11 +3,11 @@ import { IHttpServerComponent } from '@well-known-components/interfaces'
 import { DecentralandSignatureContext } from 'decentraland-crypto-middleware/lib/types'
 
 export async function commsAdapterHandler(
-  context: HandlerContextWithPath<'commsResolver' | 'storage', '/get-comms-adapter/:roomId'> &
+  context: HandlerContextWithPath<'commsResolver' | 'config' | 'storage', '/get-comms-adapter/:roomId'> &
     DecentralandSignatureContext<any>
 ): Promise<IHttpServerComponent.IResponse> {
   const {
-    components: { commsResolver, storage }
+    components: { commsResolver, config, storage }
   } = context
 
   if (!validateMetadata(context.verification!.authMetadata)) {
@@ -19,7 +19,8 @@ export async function commsAdapterHandler(
     }
   }
 
-  if (!context.params.roomId.startsWith('w-')) {
+  const roomPrefix = await config.requireString('COMMS_ROOM_PREFIX')
+  if (!context.params.roomId.startsWith(roomPrefix)) {
     return {
       status: 400,
       body: {
@@ -28,7 +29,7 @@ export async function commsAdapterHandler(
     }
   }
 
-  const worldName = context.params.roomId.substring(2)
+  const worldName = context.params.roomId.substring(roomPrefix.length)
 
   if (!(await storage.exist('name-' + worldName))) {
     return {

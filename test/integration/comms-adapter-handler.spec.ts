@@ -17,7 +17,7 @@ test('comms adapter handler /get-comms-adapter/:roomId', function ({ components 
 
     storage.storage.set('name-myRoom', stringToUtf8Bytes(''))
 
-    const path = '/get-comms-adapter/w-myRoom'
+    const path = '/get-comms-adapter/world-myRoom'
     const actualInit = {
       method: 'POST',
       headers: {
@@ -47,7 +47,7 @@ test('comms adapter handler /get-comms-adapter/:roomId', function ({ components 
 
     expect(r.status).toEqual(200)
     expect(await r.json()).toEqual({
-      fixedAdapter: 'ws-room:ws-room-service.decentraland.org/rooms/w-myRoom'
+      fixedAdapter: 'ws-room:ws-room-service.decentraland.org/rooms/world-myRoom'
     })
   })
 })
@@ -58,7 +58,7 @@ test('comms adapter handler /get-comms-adapter/:roomId', function ({ components 
 
     const identity = await getIdentity()
 
-    const path = '/get-comms-adapter/w-myRoom'
+    const path = '/get-comms-adapter/world-myRoom'
     const actualInit = {
       method: 'POST',
       headers: {
