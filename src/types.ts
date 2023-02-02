@@ -50,6 +50,7 @@ export type IWorldNamePermissionChecker = {
 }
 
 export type ContentStatus = {
+  commitHash: string
   worldsCount: number
   details?: string[]
 }
@@ -57,13 +58,15 @@ export type ContentStatus = {
 export type WorldStatus = { worldName: string; users: number }
 
 export type CommsStatus = {
+  adapterType: string
+  statusUrl: string
+  commitHash?: string
   users: number
   rooms: number
   details?: WorldStatus[]
 }
 
 export type StatusResponse = {
-  commitHash: string
   content: ContentStatus
   comms: CommsStatus
 }

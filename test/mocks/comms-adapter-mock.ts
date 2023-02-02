@@ -8,6 +8,9 @@ export function createMockCommsAdapterComponent(): ICommsAdapter {
     },
     status(): Promise<CommsStatus> {
       return Promise.resolve({
+        adapterType: 'mock',
+        statusUrl: 'http://localhost:3000',
+        commitHash: 'unknown',
         users: 2,
         rooms: 1,
         details: [

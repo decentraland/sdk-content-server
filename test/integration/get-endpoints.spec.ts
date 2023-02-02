@@ -56,8 +56,8 @@ test('consume status endpoint', function ({ components }) {
 
       expect(r.status).toEqual(200)
       expect(await r.json()).toMatchObject({
-        commitHash: 'unknown',
         content: {
+          commitHash: 'unknown',
           worldsCount: 1
         },
         comms: {
@@ -77,8 +77,8 @@ test('consume status endpoint', function ({ components }) {
 
       expect(r.status).toEqual(200)
       expect(await r.json()).toMatchObject({
-        commitHash: 'unknown',
         content: {
+          commitHash: 'unknown',
           worldsCount: 1,
           details: ['some-name.dcl.eth']
         },

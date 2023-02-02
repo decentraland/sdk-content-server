@@ -52,6 +52,9 @@ function createWsRoomAdapter(
         .then((response) => response.json())
         .then(
           (res: any): CommsStatus => ({
+            adapterType: 'ws-room',
+            statusUrl,
+            commitHash: res.commitHash,
             rooms: res.rooms,
             users: res.users,
             details: res.details
@@ -104,6 +107,8 @@ function createLiveKitAdapter(
             })
 
           return {
+            adapterType: 'livekit',
+            statusUrl: `https://${host}/`,
             rooms: roomList.length,
             users: roomList.reduce((carry: number, value: WorldStatus) => carry + value.users, 0),
             details: roomList
