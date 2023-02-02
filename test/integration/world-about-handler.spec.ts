@@ -41,9 +41,7 @@ test('world about handler /world/:world_name/about', function ({ components }) {
       configurations: {
         networkId: 5,
         globalScenesUrn: [],
-        scenesUrn: [
-          `urn:decentraland:entity:${ENTITY_CID}?baseUrl=https://0.0.0.0:3000/contents/`
-        ],
+        scenesUrn: [`urn:decentraland:entity:${ENTITY_CID}?baseUrl=https://0.0.0.0:3000/contents/`],
         minimap: { enabled: false },
         skybox: {},
         realmName: ENS
@@ -68,11 +66,12 @@ test('world about handler /world/:world_name/about', function ({ components }) {
       }
     })
     expect(r.status).toEqual(200)
-    expect(await r.json()).toEqual([{
-      ...STORED_ENTITY,
-      timestamp: 0, // we don't store the deployment timestamp yet
-      id: ENTITY_CID
-    }
+    expect(await r.json()).toEqual([
+      {
+        ...STORED_ENTITY,
+        timestamp: 0, // we don't store the deployment timestamp yet
+        id: ENTITY_CID
+      }
     ])
   })
 })

@@ -19,11 +19,11 @@ export async function setupRouter(_globalContext: GlobalContext): Promise<Router
   // creation
   router.post('/entities', multipartParserWrapper(deployEntity))
   router.get('/available-content', availableContentHandler)
-  
+
   // consumption
   router.head('/ipfs/:hashId', headContentFile)
   router.get('/ipfs/:hashId', getContentFile)
-  
+
   router.post('/entities/active', activeEntitiesHandler)
   router.head('/contents/:hashId', headContentFile)
   router.get('/contents/:hashId', getContentFile)
