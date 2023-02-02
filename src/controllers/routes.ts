@@ -8,6 +8,7 @@ import { worldAboutHandler } from './handlers/world-about-handler'
 import { statusHandler } from './handlers/statusHandler'
 import { commsAdapterHandler } from './handlers/commsAdapterHandler'
 import { wellKnownComponents } from 'decentraland-crypto-middleware'
+import { activeEntitiesHandler } from './handlers/activeEntities'
 
 export async function setupRouter(_globalContext: GlobalContext): Promise<Router<GlobalContext>> {
   const router = new Router<GlobalContext>()
@@ -18,12 +19,12 @@ export async function setupRouter(_globalContext: GlobalContext): Promise<Router
   // creation
   router.post('/entities', multipartParserWrapper(deployEntity))
   router.get('/available-content', availableContentHandler)
-
+  
   // consumption
   router.head('/ipfs/:hashId', headContentFile)
   router.get('/ipfs/:hashId', getContentFile)
-
-  // legacy?
+  
+  router.post('/entities/active', activeEntitiesHandler)
   router.head('/contents/:hashId', headContentFile)
   router.get('/contents/:hashId', getContentFile)
 

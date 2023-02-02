@@ -33,7 +33,7 @@ export async function worldAboutHandler({
 
   const baseUrl = ((await config.getString('HTTP_BASE_URL')) || `https://${url.host}`).toString()
 
-  const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}/ipfs/`
+  const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}/contents/`
 
   const networkId = await config.requireNumber('NETWORK_ID')
   const roomPrefix = await config.requireString('COMMS_ROOM_PREFIX')
