@@ -1,29 +1,39 @@
-import { HandlerContextWithPath } from '../../types'
+import { HandlerContextWithPath, StatusResponse } from '../../types'
 import { IHttpServerComponent } from '@well-known-components/interfaces'
 
 export async function statusHandler(
-  context: HandlerContextWithPath<'config' | 'worldsManager', '/status'>
+  context: HandlerContextWithPath<'commsAdapter' | 'config' | 'worldsManager', '/status'>
 ): Promise<IHttpServerComponent.IResponse> {
-  const { config, worldsManager } = context.components
+  const { commsAdapter, config, worldsManager } = context.components
 
   const commitHash = (await config.getString('COMMIT_HASH')) || 'unknown'
   const secret = await config.getString('AUTH_SECRET')
 
-  let showWorlds = false
+  let showDetails = false
   if (secret) {
     const token = context.request.headers.get('Authorization')?.substring(7) // Remove the "Bearer " part
     if (token && token === secret) {
-      showWorlds = true
+      showDetails = true
     }
   }
+
   const deployedWorlds = await worldsManager.getDeployedWorldsNames()
+  const commsStatus = await commsAdapter.status()
+
+  const status: StatusResponse = {
+    commitHash,
+    content: {
+      worldsCount: deployedWorlds.length,
+      details: showDetails ? deployedWorlds : undefined
+    },
+    comms: {
+      ...commsStatus,
+      details: showDetails ? commsStatus.details : undefined
+    }
+  }
 
   return {
     status: 200,
-    body: {
-      commitHash,
-      worldsCount: deployedWorlds.length,
-      deployedWorlds: showWorlds ? deployedWorlds : undefined
-    }
+    body: status
   }
 }

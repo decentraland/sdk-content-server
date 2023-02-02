@@ -8,7 +8,7 @@ export async function storeJson(storage: IContentStorageComponent, fileId: strin
   const buffer = stringToUtf8Bytes(JSON.stringify(data))
   let index = 0
 
-  return storage.storeStream(
+  return await storage.storeStream(
     fileId,
     new Readable({
       read(size) {

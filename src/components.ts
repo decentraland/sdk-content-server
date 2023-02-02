@@ -4,7 +4,7 @@ import { createLogComponent } from '@well-known-components/logger'
 import { createFetchComponent } from './adapters/fetch'
 import { createMetricsComponent } from '@well-known-components/metrics'
 import { createSubgraphComponent } from '@well-known-components/thegraph-component'
-import { AppComponents, GlobalContext, ICommsResolver, IWorldNamePermissionChecker, SnsComponent } from './types'
+import { AppComponents, GlobalContext, ICommsAdapter, IWorldNamePermissionChecker, SnsComponent } from './types'
 import { metricDeclarations } from './metrics'
 import { metricDeclarations as theGraphMetricDeclarations } from '@well-known-components/thegraph-component'
 import { HTTPProvider } from 'eth-connect'
@@ -18,7 +18,7 @@ import { createValidator } from './adapters/validator'
 import { createDclNameChecker, createOnChainDclNameChecker } from './adapters/dcl-name-checker'
 import { createLimitsManagerComponent } from './adapters/limits-manager'
 import { createWorldsManagerComponent } from './adapters/worlds-manager'
-import { createCommsResolverComponent } from './adapters/comms-resolver'
+import { createCommsAdapterComponent } from './adapters/comms-adapter'
 
 async function determineNameValidator(
   components: Pick<AppComponents, 'config' | 'ethereumProvider' | 'logs' | 'marketplaceSubGraph'>
@@ -46,8 +46,6 @@ export async function initComponents(): Promise<AppComponents> {
     logger.warn('No secret defined, deployed worlds will not be returned.')
   }
 
-  const commsResolver: ICommsResolver = await createCommsResolverComponent({ config, logs })
-
   const server = await createServerComponent<GlobalContext>({ config, logs }, { cors: {} })
   const statusChecks = await createStatusCheckComponent({ server, config })
   const fetch = await createFetchComponent()
@@ -55,6 +53,8 @@ export async function initComponents(): Promise<AppComponents> {
     { ...metricDeclarations, ...theGraphMetricDeclarations },
     { server, config }
   )
+
+  const commsAdapter: ICommsAdapter = await createCommsAdapterComponent({ config, fetch, logs })
 
   const rpcUrl = await config.requireString('RPC_URL')
   const ethereumProvider = new HTTPProvider(rpcUrl, fetch)
@@ -99,7 +99,7 @@ export async function initComponents(): Promise<AppComponents> {
   const worldsManager = await createWorldsManagerComponent({ logs, storage })
 
   return {
-    commsResolver,
+    commsAdapter,
     config,
     namePermissionChecker,
     logs,

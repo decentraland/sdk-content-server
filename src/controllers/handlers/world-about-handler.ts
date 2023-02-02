@@ -5,9 +5,8 @@ import {
   AboutResponse_SkyboxConfiguration
 } from '@dcl/protocol/out-js/decentraland/bff/http_endpoints.gen'
 import { streamToBuffer } from '@dcl/catalyst-storage/dist/content-item'
-import { IConfigComponent } from '@well-known-components/interfaces'
 
-export async function dclNameAboutHandler({
+export async function worldAboutHandler({
   params,
   url,
   components: { config, status, storage, worldsManager }

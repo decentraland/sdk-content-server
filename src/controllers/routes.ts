@@ -4,17 +4,16 @@ import { GlobalContext } from '../types'
 import { aboutHandler } from './handlers/aboutHandler'
 import { availableContentHandler, getContentFile, headContentFile } from './handlers/contentFileHandler'
 import { deployEntity } from './handlers/deployEntityHandler'
-import { dclNameAboutHandler } from './handlers/dclNameAboutHandler'
+import { worldAboutHandler } from './handlers/world-about-handler'
 import { statusHandler } from './handlers/statusHandler'
 import { commsAdapterHandler } from './handlers/commsAdapterHandler'
 import { wellKnownComponents } from 'decentraland-crypto-middleware'
 
-// We return the entire router because it will be easier to test than a whole server
 export async function setupRouter(_globalContext: GlobalContext): Promise<Router<GlobalContext>> {
   const router = new Router<GlobalContext>()
 
   router.get('/about', aboutHandler)
-  router.get('/world/:world_name/about', dclNameAboutHandler)
+  router.get('/world/:world_name/about', worldAboutHandler)
 
   // creation
   router.post('/entities', multipartParserWrapper(deployEntity))

@@ -5,8 +5,8 @@ test('world about handler /world/:world_name/about', function ({ components }) {
   it('when world exists it responds', async () => {
     const { localFetch, storage } = components
 
-    storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', { metadata: {} })
-    storeJson(storage, 'name-some-name.dcl.eth', {
+    await storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', { metadata: {} })
+    await storeJson(storage, 'name-some-name.dcl.eth', {
       entityId: 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y'
     })
 
@@ -40,14 +40,14 @@ test('world about handler /world/:world_name/about', function ({ components }) {
   it('when world exists and has minimap it responds', async () => {
     const { localFetch, storage } = components
 
-    storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', {
+    await storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', {
       metadata: {
         worldConfiguration: {
           minimapVisible: true
         }
       }
     })
-    storeJson(storage, 'name-some-name.dcl.eth', {
+    await storeJson(storage, 'name-some-name.dcl.eth', {
       entityId: 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y'
     })
 
@@ -69,14 +69,14 @@ test('world about handler /world/:world_name/about', function ({ components }) {
   it('when world exists and uses offline comms', async () => {
     const { localFetch, storage } = components
 
-    storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', {
+    await storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', {
       metadata: {
         worldConfiguration: {
           fixedAdapter: 'offline:offline'
         }
       }
     })
-    storeJson(storage, 'name-some-name.dcl.eth', {
+    await storeJson(storage, 'name-some-name.dcl.eth', {
       entityId: 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y'
     })
 
@@ -106,7 +106,7 @@ test('world about handler /world/:world_name/about', function ({ components }) {
   it('when world exists but the scene does not, it responds with 404', async () => {
     const { localFetch, storage } = components
 
-    storeJson(storage, 'name-some-name.dcl.eth', {
+    await storeJson(storage, 'name-some-name.dcl.eth', {
       entityId: 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y'
     })
 

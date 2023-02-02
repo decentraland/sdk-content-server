@@ -55,9 +55,15 @@ test('consume status endpoint', function ({ components }) {
       const r = await localFetch.fetch('/status')
 
       expect(r.status).toEqual(200)
-      expect(await r.json()).toEqual({
+      expect(await r.json()).toMatchObject({
         commitHash: 'unknown',
-        worldsCount: 1
+        content: {
+          worldsCount: 1
+        },
+        comms: {
+          rooms: 1,
+          users: 2
+        }
       })
     }
 
@@ -70,10 +76,22 @@ test('consume status endpoint', function ({ components }) {
       })
 
       expect(r.status).toEqual(200)
-      expect(await r.json()).toEqual({
+      expect(await r.json()).toMatchObject({
         commitHash: 'unknown',
-        worldsCount: 1,
-        deployedWorlds: ['some-name.dcl.eth']
+        content: {
+          worldsCount: 1,
+          details: ['some-name.dcl.eth']
+        },
+        comms: {
+          rooms: 1,
+          users: 2,
+          details: [
+            {
+              worldName: 'mariano.dcl.eth',
+              users: 2
+            }
+          ]
+        }
       })
     }
   })
