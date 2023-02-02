@@ -2,15 +2,38 @@ import { test } from '../components'
 import { storeJson } from '../utils'
 
 test('world about handler /world/:world_name/about', function ({ components }) {
+  const STORED_ENTITY = { metadata: {} }
+  const ENTITY_CID = 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y'
+  const ENS = 'some-name.dcl.eth'
+
+  it('when world is not yet deployed it responds 404', async () => {
+    const { localFetch } = components
+    const r = await localFetch.fetch(`/world/${ENS}/about`)
+    expect(r.status).toEqual(404)
+  })
+
+  it('when world is not yet deployed it responds [] in active entities', async () => {
+    const { localFetch } = components
+    const r = await localFetch.fetch('/entities/active', {
+      method: 'POST',
+      body: JSON.stringify({ pointers: [ENS] }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    expect(r.status).toEqual(200)
+    expect(await r.json()).toEqual([])
+  })
+
   it('when world exists it responds', async () => {
     const { localFetch, storage } = components
 
-    await storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', { metadata: {} })
-    await storeJson(storage, 'name-some-name.dcl.eth', {
-      entityId: 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y'
+    await storeJson(storage, ENTITY_CID, STORED_ENTITY)
+    await storeJson(storage, `name-${ENS}`, {
+      entityId: ENTITY_CID
     })
 
-    const r = await localFetch.fetch('/world/some-name.dcl.eth/about')
+    const r = await localFetch.fetch(`/world/${ENS}/about`)
     expect(r.status).toEqual(200)
     expect(await r.json()).toEqual({
       healthy: true,
@@ -18,21 +41,38 @@ test('world about handler /world/:world_name/about', function ({ components }) {
       configurations: {
         networkId: 5,
         globalScenesUrn: [],
-        scenesUrn: [
-          'urn:decentraland:entity:bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y?baseUrl=https://0.0.0.0:3000/ipfs/'
-        ],
+        scenesUrn: [`urn:decentraland:entity:${ENTITY_CID}?baseUrl=https://0.0.0.0:3000/contents/`],
         minimap: { enabled: false },
         skybox: {},
-        realmName: 'some-name.dcl.eth'
+        realmName: ENS
       },
       content: { healthy: true, publicUrl: 'https://peer.com/content' },
       lambdas: { healthy: true, publicUrl: 'https://peer.com/lambdas' },
       comms: {
         healthy: true,
         protocol: 'v3',
-        fixedAdapter: 'signed-login:https://0.0.0.0:3000/get-comms-adapter/world-some-name.dcl.eth'
+        fixedAdapter: `signed-login:https://0.0.0.0:3000/get-comms-adapter/world-${ENS}`
       }
     })
+  })
+
+  it('when world is deployed it responds [<Entity>] in active entities endpoint', async () => {
+    const { localFetch } = components
+    const r = await localFetch.fetch('/entities/active', {
+      method: 'POST',
+      body: JSON.stringify({ pointers: [ENS] }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    expect(r.status).toEqual(200)
+    expect(await r.json()).toEqual([
+      {
+        ...STORED_ENTITY,
+        timestamp: 0, // we don't store the deployment timestamp yet
+        id: ENTITY_CID
+      }
+    ])
   })
 })
 

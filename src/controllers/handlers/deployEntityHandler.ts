@@ -162,7 +162,7 @@ export async function deployEntity(
     }
 
     const worldUrl = `${baseUrl}/world/${worldName}`
-    const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}/ipfs`
+    const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}/contents`
 
     return {
       status: 200,

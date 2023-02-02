@@ -2,18 +2,18 @@ import { test } from '../components'
 import { storeJson } from '../utils'
 
 test('consume content endpoints', function ({ components }) {
-  it('responds /ipfs/:cid and works', async () => {
+  it('responds /contents/:cid and works', async () => {
     const { localFetch, storage } = components
 
     {
-      const r = await localFetch.fetch('/ipfs/bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y')
+      const r = await localFetch.fetch('/contents/bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y')
       expect(r.status).toEqual(404)
     }
 
     await storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', 'Hola')
 
     {
-      const r = await localFetch.fetch('/ipfs/bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y')
+      const r = await localFetch.fetch('/contents/bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y')
       expect(r.status).toEqual(200)
       expect(await r.text()).toEqual('"Hola"')
     }
@@ -21,11 +21,11 @@ test('consume content endpoints', function ({ components }) {
 })
 
 test('consume content endpoints', function ({ components }) {
-  it('responds HEAD /ipfs/:cid and works', async () => {
+  it('responds HEAD /contents/:cid and works', async () => {
     const { localFetch, storage } = components
 
     {
-      const r = await localFetch.fetch('/ipfs/bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', {
+      const r = await localFetch.fetch('/contents/bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', {
         method: 'HEAD'
       })
       expect(r.status).toEqual(404)
@@ -33,7 +33,7 @@ test('consume content endpoints', function ({ components }) {
 
     await storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', 'Hola')
     {
-      const r = await localFetch.fetch('/ipfs/bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', {
+      const r = await localFetch.fetch('/contents/bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', {
         method: 'HEAD'
       })
       expect(r.status).toEqual(200)

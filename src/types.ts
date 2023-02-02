@@ -83,6 +83,7 @@ export type IWorldsManager = {
   getDeployedWorldsNames(): Promise<string[]>
   getDeployedWorldsCount(): Promise<number>
   getEntityIdForWorld(worldName: string): Promise<string | undefined>
+  getEntityForWorld(worldName: string): Promise<Entity | undefined>
 }
 
 // components used in every environment
