@@ -38,13 +38,6 @@ export type ValidatorComponents = Pick<
   'config' | 'namePermissionChecker' | 'ethereumProvider' | 'limitsManager' | 'storage'
 >
 
-export type Validation2 = {
-  validate: (
-    components: ValidatorComponents,
-    deployment: DeploymentToValidate
-  ) => ValidationResult | Promise<ValidationResult>
-}
-
 export type Validation = (
   components: ValidatorComponents,
   deployment: DeploymentToValidate
