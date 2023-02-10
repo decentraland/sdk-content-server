@@ -38,12 +38,17 @@ export type ValidatorComponents = Pick<
   'config' | 'namePermissionChecker' | 'ethereumProvider' | 'limitsManager' | 'storage'
 >
 
-export type Validation = {
+export type Validation2 = {
   validate: (
     components: ValidatorComponents,
     deployment: DeploymentToValidate
   ) => ValidationResult | Promise<ValidationResult>
 }
+
+export type Validation = (
+  components: ValidatorComponents,
+  deployment: DeploymentToValidate
+) => ValidationResult | Promise<ValidationResult>
 
 export type IWorldNamePermissionChecker = {
   checkPermission(ethAddress: EthAddress, worldName: string): Promise<boolean>
