@@ -78,7 +78,7 @@ describe('validator', function () {
     // make the entity invalid
     delete deployment.entity.type
 
-    const result = await validateEntity.validate(components, deployment)
+    const result = await validateEntity(components, deployment)
     expect(result.ok()).toBeFalsy()
     expect(result.errors).toContain("must have required property 'type'")
   })
@@ -92,7 +92,7 @@ describe('validator', function () {
       files: []
     })
 
-    const result = await validateEntity.validate(components, deployment)
+    const result = await validateEntity(components, deployment)
     expect(result.ok()).toBeFalsy()
     expect(result.errors).toContain(
       '`dclName` in scene.json was renamed to `name`. Please update your scene.json accordingly.'
@@ -105,7 +105,7 @@ describe('validator', function () {
     // make the entity id invalid
     deployment.entity.id = 'bafkreie3yaomoex7orli7fumfwgk5abgels5o5fiauxfijzlzoiymqppdi'
 
-    const result = await validateEntityId.validate(components, deployment)
+    const result = await validateEntityId(components, deployment)
     expect(result.ok()).toBeFalsy()
     expect(result.errors[0]).toContain(`Invalid entity hash: expected `)
     expect(result.errors[0]).toContain(`but got bafkreie3yaomoex7orli7fumfwgk5abgels5o5fiauxfijzlzoiymqppdi`)
@@ -120,7 +120,7 @@ describe('validator', function () {
       files: []
     })
 
-    const result = await validateDeploymentTtl.validate(components, deployment)
+    const result = await validateDeploymentTtl(components, deployment)
     expect(result.ok()).toBeFalsy()
     expect(result.errors[0]).toContain('Deployment was created ')
     expect(result.errors[0]).toContain('secs ago. Max allowed: 10 secs.')
@@ -132,7 +132,7 @@ describe('validator', function () {
     // Alter the authChain to make it fail
     deployment.authChain = []
 
-    const result = await validateAuthChain.validate(components, deployment)
+    const result = await validateAuthChain(components, deployment)
     expect(result.ok()).toBeFalsy()
     expect(result.errors).toContain('must NOT have fewer than 1 items')
   })
@@ -143,7 +143,7 @@ describe('validator', function () {
     // Alter the signature to make it fail
     deployment.authChain[0].payload = 'Invalid'
 
-    const result = await validateSigner.validate(components, deployment)
+    const result = await validateSigner(components, deployment)
     expect(result.ok()).toBeFalsy()
     expect(result.errors).toContain('Invalid signer: Invalid')
   })
@@ -154,7 +154,7 @@ describe('validator', function () {
     // Alter the signature to make it fail
     deployment.authChain = Authenticator.signPayload(identity.authChain, 'invalidId')
 
-    const result = await validateSignature.validate(components, deployment)
+    const result = await validateSignature(components, deployment)
     expect(result.ok()).toBeFalsy()
     expect(result.errors).toContain(
       `ERROR: Invalid final authority. Expected: ${deployment.entity.id}. Current invalidId.`
@@ -174,7 +174,7 @@ describe('validator', function () {
       files: []
     })
 
-    const result = await validateDclName.validate(components, deployment)
+    const result = await validateDclName(components, deployment)
     expect(result.ok()).toBeFalsy()
     expect(result.errors).toContain(
       'Deployment failed: Your wallet has no permission to publish this scene because it does not have permission to deploy under "different.dcl.eth". Check scene.json to select a name you own.'
@@ -194,7 +194,7 @@ describe('validator', function () {
       files: []
     })
 
-    const result = await validateSceneDimensions.validate(components, deployment)
+    const result = await validateSceneDimensions(components, deployment)
     expect(result.ok()).toBeFalsy()
     expect(result.errors).toContain('Max allowed scene dimensions is 4 parcels.')
   })
@@ -213,7 +213,7 @@ describe('validator', function () {
       hash: 'bafkreie3yaomoex7orli7fumfwgk5abgels5o5fiauxfijzlzoiymqppdi'
     })
 
-    const result = await validateFiles.validate(components, deployment)
+    const result = await validateFiles(components, deployment)
     expect(result.ok()).toBeFalsy()
     expect(result.errors).toContain('Extra file detected bafkreigu77uot3qljdv2oftqmer2ogd7glvohpolbz3whza6kmzgppmkkm')
     expect(result.errors).toContain(
@@ -253,7 +253,7 @@ describe('validator', function () {
     deployment.files.delete(await hashV1(Buffer.from('asd')))
     await storage.storeStream(await hashV1(Buffer.from('asd')), bufferToStream(Buffer.from(stringToUtf8Bytes('asd'))))
 
-    const result = await validateSize.validate(components, deployment)
+    const result = await validateSize(components, deployment)
     expect(result.ok()).toBeFalsy()
     expect(result.errors).toContain(
       'The deployment is too big. The maximum total size allowed is 10 MB for scenes. You can upload up to 10485760 bytes but you tried to upload 10485763.'
@@ -274,7 +274,7 @@ describe('validator', function () {
       files: []
     })
 
-    const result = await validateSdkVersion.validate(components, deployment)
+    const result = await validateSdkVersion(components, deployment)
     expect(result.ok()).toBeFalsy()
     expect(result.errors).toContain(
       'Worlds are only supported on SDK 7. Please upgrade your scene to latest version of SDK.'
