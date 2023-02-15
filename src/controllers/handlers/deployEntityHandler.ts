@@ -2,12 +2,12 @@ import { AuthChain, AuthLink, Entity } from '@dcl/schemas'
 import { IHttpServerComponent, ILoggerComponent } from '@well-known-components/interfaces'
 import { FormDataContext } from '../../logic/multipart'
 import { AppComponents, HandlerContextWithPath } from '../../types'
-import { bufferToStream } from '@dcl/catalyst-storage/dist/content-item'
+import { bufferToStream, streamToBuffer } from '@dcl/catalyst-storage/dist/content-item'
 import { stringToUtf8Bytes } from 'eth-connect'
 import { SNS } from 'aws-sdk'
 import { DeploymentToSqs } from '@dcl/schemas/dist/misc/deployments-to-sqs'
 
-export function requireString(val: string): string {
+export function requireString(val: string | null | undefined): string {
   if (typeof val !== 'string') throw new Error('A string was expected')
   return val
 }
@@ -63,9 +63,16 @@ async function storeEntity(
   logger.info(`Storing entity`, { cid: entity.id })
   await storage.storeStream(entity.id, bufferToStream(stringToUtf8Bytes(entityJson)))
   await storage.storeStream(entity.id + '.auth', bufferToStream(stringToUtf8Bytes(JSON.stringify(authChain))))
+
+  let acl
+  const content = await storage.retrieve(`name-${worldName.toLowerCase()}`)
+  if (content) {
+    const stored = JSON.parse((await streamToBuffer(await content.asStream())).toString())
+    acl = stored.acl
+  }
   await storage.storeStream(
     `name-${worldName.toLowerCase()}`,
-    bufferToStream(stringToUtf8Bytes(JSON.stringify({ entityId: entity.id })))
+    bufferToStream(stringToUtf8Bytes(JSON.stringify({ entityId: entity.id, acl })))
   )
 }
 
@@ -77,7 +84,6 @@ export async function deployEntity(
     >
 ): Promise<IHttpServerComponent.IResponse> {
   const logger = ctx.components.logs.getLogger('deploy')
-  const sns = new SNS()
 
   const Error400 = (message: string) => {
     logger.warn(message)
@@ -149,6 +155,7 @@ export async function deployEntity(
         },
         contentServerUrls: [baseUrl]
       }
+      const sns = new SNS()
       const receipt = await sns
         .publish({
           TopicArn: ctx.components.sns.arn,

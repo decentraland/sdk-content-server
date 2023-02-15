@@ -24,6 +24,16 @@ export type DeploymentToValidate = {
   contentHashesInStorage: Map<string, boolean>
 }
 
+export type WorldMetadata = {
+  entityId: string
+  acl?: AuthChain
+}
+
+export type AccessControlList = {
+  resource: string
+  allowed: EthAddress[]
+}
+
 export interface Validator {
   validate(deployment: DeploymentToValidate): Promise<ValidationResult>
 }
@@ -35,7 +45,7 @@ export type ValidationResult = {
 
 export type ValidatorComponents = Pick<
   AppComponents,
-  'config' | 'namePermissionChecker' | 'ethereumProvider' | 'limitsManager' | 'storage'
+  'config' | 'namePermissionChecker' | 'ethereumProvider' | 'limitsManager' | 'storage' | 'worldsManager'
 >
 
 export type Validation = (
@@ -83,8 +93,10 @@ export type ILimitsManager = {
 export type IWorldsManager = {
   getDeployedWorldsNames(): Promise<string[]>
   getDeployedWorldsCount(): Promise<number>
+  getMetadataForWorld(worldName: string): Promise<WorldMetadata | undefined>
   getEntityIdForWorld(worldName: string): Promise<string | undefined>
   getEntityForWorld(worldName: string): Promise<Entity | undefined>
+  storeAcl(worldName: string, acl: AuthChain): Promise<void>
 }
 
 // components used in every environment

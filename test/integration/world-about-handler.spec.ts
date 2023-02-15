@@ -1,17 +1,19 @@
 import { test } from '../components'
 import { storeJson } from '../utils'
 
-test('world about handler /world/:world_name/about', function ({ components }) {
-  const STORED_ENTITY = { metadata: {} }
-  const ENTITY_CID = 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y'
-  const ENS = 'some-name.dcl.eth'
+const STORED_ENTITY = { metadata: {} }
+const ENTITY_CID = 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y'
+const ENS = 'some-name.dcl.eth'
 
+test('world about handler /world/:world_name/about', function ({ components }) {
   it('when world is not yet deployed it responds 404', async () => {
     const { localFetch } = components
     const r = await localFetch.fetch(`/world/${ENS}/about`)
     expect(r.status).toEqual(404)
   })
+})
 
+test('world about handler /world/:world_name/about', function ({ components }) {
   it('when world is not yet deployed it responds [] in active entities', async () => {
     const { localFetch } = components
     const r = await localFetch.fetch('/entities/active', {
@@ -24,7 +26,9 @@ test('world about handler /world/:world_name/about', function ({ components }) {
     expect(r.status).toEqual(200)
     expect(await r.json()).toEqual([])
   })
+})
 
+test('world about handler /world/:world_name/about', function ({ components }) {
   it('when world exists it responds', async () => {
     const { localFetch, storage } = components
 
@@ -55,9 +59,16 @@ test('world about handler /world/:world_name/about', function ({ components }) {
       }
     })
   })
+})
 
+test('world about handler /world/:world_name/about', function ({ components }) {
   it('when world is deployed it responds [<Entity>] in active entities endpoint', async () => {
-    const { localFetch } = components
+    const { localFetch, storage } = components
+
+    await storeJson(storage, ENTITY_CID, STORED_ENTITY)
+    await storeJson(storage, `name-${ENS}`, {
+      entityId: ENTITY_CID
+    })
     const r = await localFetch.fetch('/entities/active', {
       method: 'POST',
       body: JSON.stringify({ pointers: [ENS] }),

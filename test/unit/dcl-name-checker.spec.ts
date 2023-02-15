@@ -35,7 +35,7 @@ describe('dcl name checker: TheGraph', function () {
       logs,
       marketplaceSubGraph: {
         query: async (_query: string, _variables?: Variables, _remainingAttempts?: number): Promise<any> => ({
-          names: []
+          nfts: []
         })
       }
     })
@@ -48,9 +48,12 @@ describe('dcl name checker: TheGraph', function () {
       logs,
       marketplaceSubGraph: {
         query: async (_query: string, _variables?: Variables, _remainingAttempts?: number): Promise<any> => ({
-          names: [
+          nfts: [
             {
-              name: 'my-super-name'
+              name: 'my-super-name',
+              owner: {
+                id: '0xb'
+              }
             }
           ]
         })

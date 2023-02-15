@@ -5,7 +5,7 @@ import { ContractFactory, RequestManager } from 'eth-connect'
 import { checkerAbi, checkerContracts, registrarContracts } from '@dcl/catalyst-contracts'
 
 type NamesResponse = {
-  names: { name: string }[]
+  nfts: { name: string; owner: { id: string } }[]
 }
 
 export const createDclNameChecker = (
@@ -14,26 +14,41 @@ export const createDclNameChecker = (
   const logger = components.logs.getLogger('check-permissions')
   logger.info('Using TheGraph DclNameChecker')
 
-  const cache = new LRU<EthAddress, string[]>({
+  const cache = new LRU<string, string | undefined>({
     max: 100,
     ttl: 5 * 60 * 1000, // cache for 5 minutes
-    fetchMethod: async (ethAddress: EthAddress): Promise<string[]> => {
+    fetchMethod: async (worldName: string): Promise<string | undefined> => {
+      /*
+      DCL owners are case-sensitive, so when searching by dcl name in TheGraph we
+      need to do a case-insensitive search because the worldName provided as fetch key
+      may not be in the exact same case of the registered name. There are several methods
+      suffixed _nocase, but not one for equality, so this is a bit hackish, but it works.
+       */
       const result = await components.marketplaceSubGraph.query<NamesResponse>(
         `
-      query FetchNames($ethAddress: String) {
-          names: nfts(where: { owner: $ethAddress, category: ens }, orderBy: name, first: 1000) {
+        query FetchOwnerForDclName($worldName: String) {
+          nfts(
+            where: {name_starts_with_nocase: $worldName, name_ends_with_nocase: $worldName, category: ens}
+            orderBy: name
+            first: 1000
+          ) {
             name
+            owner {
+              id
+            }
           }
-       }`,
+        }`,
         {
-          ethAddress: ethAddress.toLowerCase()
+          worldName: worldName.toLowerCase().replace('.dcl.eth', '')
         }
       )
+      logger.info(`Fetched owner of world ${worldName}: ${result.nfts.map(({ owner }) => owner.id.toLowerCase())}`)
 
-      const names = result.names.map(({ name }) => `${name.toLowerCase()}.dcl.eth`)
+      const owners = result.nfts
+        .filter((nft) => `${nft.name.toLowerCase()}.dcl.eth` === worldName.toLowerCase())
+        .map(({ owner }) => owner.id.toLowerCase())
 
-      logger.debug(`Fetched names for address ${ethAddress}: ${names}`)
-      return names
+      return owners.length > 0 ? owners[0] : undefined
     }
   })
 
@@ -42,8 +57,8 @@ export const createDclNameChecker = (
       return false
     }
 
-    const names = (await cache.fetch(ethAddress.toLowerCase()))!
-    return names.includes(worldName.toLowerCase())
+    const owner = await cache.fetch(worldName)
+    return !!owner && owner === ethAddress.toLowerCase()
   }
 
   return {

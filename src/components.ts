@@ -88,15 +88,16 @@ export async function initComponents(): Promise<AppComponents> {
 
   const limitsManager = await createLimitsManagerComponent({ config, fetch, logs })
 
+  const worldsManager = await createWorldsManagerComponent({ logs, storage })
+
   const validator = createValidator({
     config,
     namePermissionChecker,
     ethereumProvider,
     limitsManager,
-    storage
+    storage,
+    worldsManager
   })
-
-  const worldsManager = await createWorldsManagerComponent({ logs, storage })
 
   return {
     commsAdapter,

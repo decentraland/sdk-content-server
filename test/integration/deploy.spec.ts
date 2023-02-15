@@ -5,7 +5,8 @@ import { Authenticator } from '@dcl/crypto'
 import Sinon from 'sinon'
 import { stringToUtf8Bytes } from 'eth-connect'
 import { hashV1 } from '@dcl/hashing'
-import { getIdentity } from '../utils'
+import { getIdentity, storeJson } from '../utils'
+import { streamToBuffer } from '@dcl/catalyst-storage/dist/content-item'
 
 test('deployment works', function ({ components, stubComponents }) {
   it('creates an entity and deploys it', async () => {
@@ -61,6 +62,84 @@ test('deployment works', function ({ components, stubComponents }) {
   })
 })
 
+test('deployment works when not owner but has permission', function ({ components, stubComponents }) {
+  it('creates an entity and deploys it', async () => {
+    const { config, storage } = components
+    const { namePermissionChecker, metrics } = stubComponents
+
+    const contentClient = new ContentClient({
+      contentUrl: `http://${await config.requireString('HTTP_SERVER_HOST')}:${await config.requireNumber(
+        'HTTP_SERVER_PORT'
+      )}`
+    })
+
+    const delegatedIdentity = await getIdentity()
+    const ownerIdentity = await getIdentity()
+
+    const payload = `{"resource":"my-world.dcl.eth","allowed":["${delegatedIdentity.realAccount.address}"]}`
+
+    await storeJson(storage, 'name-my-super-name.dcl.eth', {
+      entityId: 'bafkreiax5plaxze77tnjbnozga7dsbefdh53horza4adf2xjzxo3k5i4xq',
+      acl: Authenticator.signPayload(ownerIdentity.authChain, payload)
+    })
+
+    const entityFiles = new Map<string, Uint8Array>()
+    entityFiles.set('abc.txt', stringToUtf8Bytes('asd'))
+    const fileHash = await hashV1(entityFiles.get('abc.txt'))
+    await storeJson(storage, fileHash, {})
+
+    await storeJson(storage, 'name-my-super-name.dcl.eth', {
+      entityId: fileHash,
+      acl: Authenticator.signPayload(ownerIdentity.authChain, payload)
+    })
+
+    // Build the entity
+    const { files, entityId } = await contentClient.buildEntity({
+      type: EntityType.SCENE,
+      pointers: ['0,0'],
+      files: entityFiles,
+      metadata: {
+        worldConfiguration: {
+          name: 'my-super-name.dcl.eth'
+        }
+      }
+    })
+
+    namePermissionChecker.checkPermission
+      .withArgs(ownerIdentity.authChain.authChain[0].payload, 'my-super-name.dcl.eth')
+      .resolves(true)
+    namePermissionChecker.checkPermission
+      .withArgs(delegatedIdentity.authChain.authChain[0].payload, 'my-super-name.dcl.eth')
+      .resolves(false)
+
+    const authChain = Authenticator.signPayload(delegatedIdentity.authChain, entityId)
+
+    // Deploy entity
+    await contentClient.deployEntity({ files, entityId, authChain })
+
+    Sinon.assert.calledWith(
+      namePermissionChecker.checkPermission,
+      ownerIdentity.authChain.authChain[0].payload,
+      'my-super-name.dcl.eth'
+    )
+
+    Sinon.assert.calledWith(
+      namePermissionChecker.checkPermission,
+      delegatedIdentity.authChain.authChain[0].payload,
+      'my-super-name.dcl.eth'
+    )
+
+    expect(await storage.exist(fileHash)).toEqual(true)
+    expect(await storage.exist(entityId)).toEqual(true)
+    const content = await storage.retrieve('name-my-super-name.dcl.eth')
+    const stored = JSON.parse((await streamToBuffer(await content.asStream())).toString())
+
+    expect(stored).toMatchObject({ entityId, acl: Authenticator.signPayload(ownerIdentity.authChain, payload) })
+
+    Sinon.assert.calledWithMatch(metrics.increment, 'world_deployments_counter')
+  })
+})
+
 test('deployment with failed validation', function ({ components, stubComponents }) {
   it('does not work because user does not own requested name', async () => {
     const { config, storage } = components
@@ -101,7 +180,7 @@ test('deployment with failed validation', function ({ components, stubComponents
 
     // Deploy entity
     await expect(() => contentClient.deployEntity({ files, entityId, authChain })).rejects.toThrow(
-      'Your wallet has no permission to publish this scene because it does not have permission to deploy under "just-do-it.dcl.eth". Check scene.json to select a name you own.'
+      'Your wallet has no permission to publish this scene because it does not have permission to deploy under "just-do-it.dcl.eth". Check scene.json to select a name that either you own or you were given permission to deploy.'
     )
 
     Sinon.assert.calledWith(

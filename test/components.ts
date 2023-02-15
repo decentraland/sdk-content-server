@@ -43,16 +43,17 @@ async function initComponents(): Promise<TestComponents> {
 
   const commsAdapter = createMockCommsAdapterComponent()
 
+  const worldsManager = await createWorldsManagerComponent({ logs, storage })
+
   const validator = createValidator({
     config,
     storage,
     namePermissionChecker,
     limitsManager,
-    ethereumProvider: components.ethereumProvider
+    ethereumProvider: components.ethereumProvider,
+    worldsManager
   })
   const status = createMockStatusComponent()
-
-  const worldsManager = await createWorldsManagerComponent({ storage, logs })
 
   return {
     ...components,

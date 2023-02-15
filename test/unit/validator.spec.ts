@@ -2,7 +2,7 @@ import { createConfigComponent } from '@well-known-components/env-config-provide
 import {
   createValidator,
   validateAuthChain,
-  validateDclName,
+  validateDeploymentPermission,
   validateDeploymentTtl,
   validateEntity,
   validateEntityId,
@@ -14,7 +14,13 @@ import {
   validateSize
 } from '../../src/adapters/validator'
 import { createInMemoryStorage, IContentStorageComponent } from '@dcl/catalyst-storage'
-import { DeploymentToValidate, IWorldNamePermissionChecker, ILimitsManager, ValidatorComponents } from '../../src/types'
+import {
+  DeploymentToValidate,
+  IWorldNamePermissionChecker,
+  ILimitsManager,
+  ValidatorComponents,
+  IWorldsManager
+} from '../../src/types'
 import { HTTPProvider, stringToUtf8Bytes } from 'eth-connect'
 import { EntityType } from '@dcl/schemas'
 import { createMockLimitsManagerComponent } from '../mocks/limits-manager-mock'
@@ -26,6 +32,8 @@ import { IConfigComponent } from '@well-known-components/interfaces'
 import { hashV0, hashV1 } from '@dcl/hashing'
 import { TextDecoder } from 'util'
 import { bufferToStream } from '@dcl/catalyst-storage/dist/content-item'
+import { createWorldsManagerComponent } from '../../src/adapters/worlds-manager'
+import { createLogComponent } from '@well-known-components/logger'
 
 describe('validator', function () {
   let config: IConfigComponent
@@ -34,6 +42,7 @@ describe('validator', function () {
   let fetch
   let limitsManager: ILimitsManager
   let worldNamePermissionChecker: IWorldNamePermissionChecker
+  let worldsManager: IWorldsManager
   let identity
   let components: ValidatorComponents
 
@@ -51,6 +60,10 @@ describe('validator', function () {
     ethereumProvider = new HTTPProvider('http://localhost', fetch)
     limitsManager = createMockLimitsManagerComponent()
     worldNamePermissionChecker = createMockNamePermissionChecker(['whatever.dcl.eth'])
+    worldsManager = await createWorldsManagerComponent({
+      logs: await createLogComponent({ config }),
+      storage
+    })
 
     identity = await getIdentity()
     components = {
@@ -58,7 +71,8 @@ describe('validator', function () {
       storage,
       limitsManager,
       ethereumProvider,
-      namePermissionChecker: worldNamePermissionChecker
+      namePermissionChecker: worldNamePermissionChecker,
+      worldsManager
     }
   })
 
@@ -174,10 +188,10 @@ describe('validator', function () {
       files: []
     })
 
-    const result = await validateDclName(components, deployment)
+    const result = await validateDeploymentPermission(components, deployment)
     expect(result.ok()).toBeFalsy()
     expect(result.errors).toContain(
-      'Deployment failed: Your wallet has no permission to publish this scene because it does not have permission to deploy under "different.dcl.eth". Check scene.json to select a name you own.'
+      'Deployment failed: Your wallet has no permission to publish this scene because it does not have permission to deploy under "different.dcl.eth". Check scene.json to select a name that either you own or you were given permission to deploy.'
     )
   })
 

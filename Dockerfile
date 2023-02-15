@@ -26,6 +26,7 @@ RUN yarn build
 # remove devDependencies, keep only used dependencies
 RUN yarn install --prod --frozen-lockfile
 
+# Make commit hash available to application
 ARG COMMIT_HASH
 RUN echo "COMMIT_HASH=$COMMIT_HASH" >> .env
 
