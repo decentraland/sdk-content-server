@@ -28,7 +28,7 @@ export async function createWorldsManagerComponent({
   })
   const worldsCache = new LRU<string, WorldMetadata>({
     max: 100,
-    ttl: 10 * 60 * 1000, // cache for 10 minutes
+    ttl: 2 * 1000, // cache for 2 seconds (should be enough for multiple accesses during the same request)
     fetchMethod: async (worldName, staleValue): Promise<WorldMetadata | undefined> => {
       const content = await storage.retrieve(`name-${worldName.toLowerCase()}`)
       if (!content) {
