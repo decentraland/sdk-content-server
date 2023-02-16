@@ -161,6 +161,38 @@ test('acl handler POST /acl/:world_name', function ({ components, stubComponents
 })
 
 test('acl handler POST /acl/:world_name', function ({ components, stubComponents }) {
+  it('fails when name owner is part of the ACL', async () => {
+    const { localFetch, storage } = components
+    const { namePermissionChecker } = stubComponents
+
+    const identity = await getIdentity()
+
+    const payload = `{"resource":"my-world.dcl.eth","allowed":["${identity.realAccount.address}"]}`
+
+    await storeJson(storage, 'name-my-world.dcl.eth', {
+      entityId: 'bafkreiax5plaxze77tnjbnozga7dsbefdh53horza4adf2xjzxo3k5i4xq'
+    })
+
+    namePermissionChecker.checkPermission
+      .withArgs(identity.authChain.authChain[0].payload, 'my-world.dcl.eth')
+      .resolves(true)
+
+    const acl = Authenticator.signPayload(identity.authChain, payload)
+
+    const r = await localFetch.fetch('/acl/my-world.dcl.eth', {
+      body: JSON.stringify(acl),
+      method: 'POST'
+    })
+
+    expect(r.status).toEqual(400)
+    expect(await r.json()).toEqual({
+      message:
+        'You are trying to give permission to yourself. You own "my-world.dcl.eth", so you already have permission to deploy scenes, no need to include yourself in the ACL.'
+    })
+  })
+})
+
+test('acl handler POST /acl/:world_name', function ({ components, stubComponents }) {
   it('fails when invalid acl (acl is not array)', async () => {
     const { localFetch, storage } = components
     const { namePermissionChecker } = stubComponents

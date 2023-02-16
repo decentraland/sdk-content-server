@@ -104,6 +104,15 @@ export async function postAclHandler(
     }
   }
 
+  if (acl.allowed.includes(authChain[0].payload)) {
+    return {
+      status: 400,
+      body: {
+        message: `You are trying to give permission to yourself. You own "${worldName}", so you already have permission to deploy scenes, no need to include yourself in the ACL.`
+      }
+    }
+  }
+
   await worldsManager.storeAcl(worldName, authChain)
 
   return {
