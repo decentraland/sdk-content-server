@@ -169,22 +169,14 @@ export async function deployEntity(
     }
 
     const worldUrl = `${baseUrl}/world/${worldName}`
-    const urn = `urn:decentraland:entity:${entityId}?baseUrl=${baseUrl}/contents`
 
     return {
       status: 200,
       body: {
         creationTimestamp: Date.now(),
         message: [
-          `Your entity was deployed to a custom content server!`,
-          `The URN for your entity is:\n  ${urn}`,
-          ``,
-          `You can preview it as a portable experience using this link: https://play.decentraland.org/?GLOBAL_PX=${encodeURIComponent(
-            urn
-          )}`,
-          ``,
-          `Preview as Space: https://play.decentraland.zone/?SPACE=${encodeURIComponent(urn)}`,
-          `Preview as World: https://play.decentraland.zone/?realm=${encodeURIComponent(worldUrl)}`
+          `Your scene was deployed to a Worlds Content Server!`,
+          `Access world ${worldName}: https://play.decentraland.org/?realm=${encodeURIComponent(worldUrl)}`
         ].join('\n')
       }
     }
