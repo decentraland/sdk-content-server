@@ -1,7 +1,6 @@
 import { Router } from '@well-known-components/http-server'
 import { multipartParserWrapper } from '../logic/multipart'
 import { GlobalContext } from '../types'
-import { aboutHandler } from './handlers/about-handler'
 import { availableContentHandler, getContentFile, headContentFile } from './handlers/content-file-handler'
 import { deployEntity } from './handlers/deploy-entity-handler'
 import { worldAboutHandler } from './handlers/world-about-handler'
@@ -14,7 +13,6 @@ import { getAclHandler, postAclHandler } from './handlers/acl-handlers'
 export async function setupRouter(_globalContext: GlobalContext): Promise<Router<GlobalContext>> {
   const router = new Router<GlobalContext>()
 
-  router.get('/about', aboutHandler)
   router.get('/world/:world_name/about', worldAboutHandler)
 
   // creation

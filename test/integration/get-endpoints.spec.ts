@@ -96,30 +96,3 @@ test('consume status endpoint', function ({ components }) {
     }
   })
 })
-
-test('consume about endpoint', function ({ components }) {
-  it('responds /about works', async () => {
-    const { localFetch } = components
-
-    const r = await localFetch.fetch('/about')
-    expect(r.status).toEqual(200)
-    expect(await r.json()).toMatchObject({
-      healthy: true,
-      acceptingUsers: true,
-      configurations: {
-        networkId: 5,
-        globalScenesUrn: [],
-        scenesUrn: [''],
-        minimap: { enabled: true },
-        skybox: {}
-      },
-      content: { healthy: true, publicUrl: 'https://peer.com/content' },
-      lambdas: { healthy: true, publicUrl: 'https://peer.com/lambdas' },
-      comms: {
-        fixedAdapter: 'ws-room:ws-room-service.decentraland.org/rooms/test-scene',
-        healthy: true,
-        protocol: 'v3'
-      }
-    })
-  })
-})
