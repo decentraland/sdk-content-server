@@ -167,7 +167,7 @@ test('acl handler POST /acl/:world_name', function ({ components, stubComponents
 
     const identity = await getIdentity()
 
-    const payload = `{"resource":"my-world.dcl.eth","allowed":["${identity.realAccount.address}"]}`
+    const payload = `{"resource":"my-world.dcl.eth","allowed":["${identity.realAccount.address.toLowerCase()}"]}`
 
     await storeJson(storage, 'name-my-world.dcl.eth', {
       entityId: 'bafkreiax5plaxze77tnjbnozga7dsbefdh53horza4adf2xjzxo3k5i4xq'

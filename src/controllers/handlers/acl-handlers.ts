@@ -104,7 +104,7 @@ export async function postAclHandler(
     }
   }
 
-  if (acl.allowed.includes(authChain[0].payload)) {
+  if (acl.allowed.map((address: EthAddress) => address.toLowerCase()).includes(authChain[0].payload.toLowerCase())) {
     return {
       status: 400,
       body: {
