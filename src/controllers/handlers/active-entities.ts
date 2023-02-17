@@ -6,7 +6,11 @@ export async function activeEntitiesHandler(
 ): Promise<IHttpServerComponent.IResponse> {
   const body = await context.request.json()
 
-  if (!body || typeof body !== 'object' || !Array.isArray(body.pointers)) return { status: 403 }
+  if (!body || typeof body !== 'object' || !Array.isArray(body.pointers))
+    return {
+      status: 400,
+      body: { message: 'Invalid request. Request body is not valid' }
+    }
 
   const pointers: string[] = []
 

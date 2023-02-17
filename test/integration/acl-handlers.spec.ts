@@ -4,13 +4,16 @@ import { Authenticator } from '@dcl/crypto'
 import { streamToBuffer } from '@dcl/catalyst-storage/dist/content-item'
 
 test('acl handler GET /acl/:world_name', function ({ components }) {
-  it('returns an error when world does not exists', async () => {
+  it('returns an error when world does not exist', async () => {
     const { localFetch } = components
 
     const r = await localFetch.fetch('/acl/my-world.dcl.eth')
 
-    expect(r.status).toBe(404)
-    expect(await r.text()).toEqual('World "my-world.dcl.eth" not deployed in this server.')
+    expect(r.status).toBe(200)
+    expect(await r.json()).toMatchObject({
+      resource: 'my-world.dcl.eth',
+      allowed: []
+    })
   })
 })
 
@@ -314,16 +317,37 @@ test('acl handler POST /acl/:world_name', function ({ components, stubComponents
   })
 })
 
-test('acl handler POST /acl/:world_name', function ({ components }) {
+test('acl handler POST /acl/:world_name', function ({ components, stubComponents }) {
   it('fails when the world name does not exist', async () => {
-    const { localFetch } = components
+    const { localFetch, storage } = components
+    const { namePermissionChecker } = stubComponents
 
+    const identity = await getIdentity()
+    const delegatedIdentity = await getIdentity()
+
+    namePermissionChecker.checkPermission
+      .withArgs(identity.authChain.authChain[0].payload, 'my-world.dcl.eth')
+      .resolves(true)
+
+    const payload = `{"resource":"my-world.dcl.eth","allowed":["${delegatedIdentity.realAccount.address}"]}`
+
+    const signature = Authenticator.createSignature(identity.realAccount, payload)
+    const acl = Authenticator.createSimpleAuthChain(payload, identity.realAccount.address, signature)
     const r = await localFetch.fetch('/acl/my-world.dcl.eth', {
-      body: JSON.stringify({}),
+      body: JSON.stringify(acl),
       method: 'POST'
     })
 
-    expect(r.status).toEqual(404)
-    expect(await r.json()).toEqual({ message: `World "my-world.dcl.eth" not deployed in this server.` })
+    expect(r.status).toEqual(200)
+    expect(await r.json()).toEqual({
+      resource: 'my-world.dcl.eth',
+      allowed: [delegatedIdentity.realAccount.address]
+    })
+
+    const content = await storage.retrieve('name-my-world.dcl.eth')
+    const stored = JSON.parse((await streamToBuffer(await content.asStream())).toString())
+    expect(stored).toMatchObject({
+      acl
+    })
   })
 })

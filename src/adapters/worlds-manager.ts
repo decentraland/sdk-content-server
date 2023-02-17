@@ -72,31 +72,24 @@ export async function createWorldsManagerComponent({
   }
 
   async function getEntityIdForWorld(worldName: string): Promise<string | undefined> {
-    const content = await worldsCache.fetch(worldName)
-    if (!content) {
-      return undefined
-    }
-
-    const { entityId } = content
-
-    return entityId
+    return (await worldsCache.fetch(worldName))?.entityId
   }
 
   async function storeAcl(worldName: string, acl: AuthChain): Promise<void> {
     const content = await worldsCache.fetch(worldName)
-    const { entityId } = content!
 
     await storage.storeStream(
       `name-${worldName}`,
       bufferToStream(
         stringToUtf8Bytes(
           JSON.stringify({
-            entityId,
+            entityId: content?.entityId,
             acl: acl
           })
         )
       )
     )
+
     worldsCache.delete(worldName)
   }
 
