@@ -6,7 +6,6 @@ import { deployEntity } from './handlers/deploy-entity-handler'
 import { worldAboutHandler } from './handlers/world-about-handler'
 import { statusHandler } from './handlers/status-handler'
 import { commsAdapterHandler } from './handlers/comms-adapter-handler'
-import { wellKnownComponents } from 'decentraland-crypto-middleware'
 import { activeEntitiesHandler } from './handlers/active-entities'
 import { getAclHandler, postAclHandler } from './handlers/acl-handlers'
 
@@ -32,7 +31,6 @@ export async function setupRouter(_globalContext: GlobalContext): Promise<Router
 
   router.get('/status', statusHandler)
 
-  router.use('/get-comms-adapter/:roomId', wellKnownComponents({}))
   router.post('/get-comms-adapter/:roomId', commsAdapterHandler)
   return router
 }

@@ -169,9 +169,9 @@ test('comms adapter handler /get-comms-adapter/:roomId', function ({ components 
       method: 'POST'
     })
 
-    expect(r.status).toEqual(400)
+    expect(r.status).toEqual(401)
     expect(await r.json()).toEqual({
-      message: 'Invalid Auth Chain',
+      message: 'Access denied, invalid signed-fetch request',
       ok: false
     })
   })

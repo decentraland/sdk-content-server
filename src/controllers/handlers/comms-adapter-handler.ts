@@ -1,6 +1,7 @@
 import { HandlerContextWithPath } from '../../types'
 import { IHttpServerComponent } from '@well-known-components/interfaces'
 import { DecentralandSignatureContext } from 'decentraland-crypto-middleware/lib/types'
+import verify from 'decentraland-crypto-middleware/lib/verify'
 
 export async function commsAdapterHandler(
   context: HandlerContextWithPath<'commsAdapter' | 'config' | 'storage', '/get-comms-adapter/:roomId'> &
@@ -9,6 +10,21 @@ export async function commsAdapterHandler(
   const {
     components: { commsAdapter, config, storage }
   } = context
+
+  const baseUrl = ((await config.getString('HTTP_BASE_URL')) || `https://${context.url.host}`).toString()
+  const path = new URL(baseUrl + context.url.pathname)
+
+  try {
+    context.verification = await verify(context.request.method, path.pathname, context.request.headers.raw(), {})
+  } catch (e) {
+    return {
+      status: 401,
+      body: {
+        ok: false,
+        message: 'Access denied, invalid signed-fetch request'
+      }
+    }
+  }
 
   if (!validateMetadata(context.verification!.authMetadata)) {
     return {
