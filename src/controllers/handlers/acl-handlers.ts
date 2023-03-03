@@ -15,7 +15,8 @@ export async function getAclHandler(
       status: 200,
       body: {
         resource: worldName,
-        allowed: []
+        allowed: [],
+        timestamp: ''
       } as AccessControlList
     }
   }
@@ -26,7 +27,8 @@ export async function getAclHandler(
   const acl: AccessControlList = !permission
     ? {
         resource: worldName,
-        allowed: []
+        allowed: [],
+        timestamp: ''
       }
     : // Get the last element of the auth chain. The payload must contain the AccessControlList
       JSON.parse(worldMetadata.acl.slice(-1).pop()!.payload)
@@ -92,6 +94,38 @@ export async function postAclHandler(
       status: 400,
       body: {
         message: `You are trying to give permission to yourself. You own "${worldName}", so you already have permission to deploy scenes, no need to include yourself in the ACL.`
+      }
+    }
+  }
+
+  if (!acl.timestamp || !Date.parse(acl.timestamp)) {
+    return {
+      status: 400,
+      body: {
+        message: `Invalid ACL, timestamp is missing or has an invalid date.`
+      }
+    }
+  }
+
+  const ts = Date.parse(acl.timestamp)
+  if (Math.abs(ts - Date.now()) > 120_000) {
+    return {
+      status: 400,
+      body: {
+        message: `Timestamp is not recent. Please sign a new ACL change request.`
+      }
+    }
+  }
+
+  const worldMetadata = await worldsManager.getMetadataForWorld(worldName)
+  if (worldMetadata && worldMetadata.acl) {
+    const oldAcl = JSON.parse(worldMetadata.acl.slice(-1).pop()!.payload) as AccessControlList
+    if (oldAcl.timestamp && ts < Date.parse(oldAcl.timestamp)) {
+      return {
+        status: 400,
+        body: {
+          message: 'There is a newer ACL stored. Please sign a new ACL change request.'
+        }
       }
     }
   }

@@ -20,7 +20,7 @@ function contentItemHeaders(content: ContentItem, hashId: string) {
 }
 
 export async function getContentFile(
-  ctx: HandlerContextWithPath<'storage', '/content/contents/:hashId'>
+  ctx: HandlerContextWithPath<'storage', '/contents/:hashId'>
 ): Promise<IHttpServerComponent.IResponse> {
   if (!IPFSv2.validate(ctx.params.hashId)) return { status: 400 }
 
@@ -32,7 +32,7 @@ export async function getContentFile(
 }
 
 export async function headContentFile(
-  ctx: HandlerContextWithPath<'storage', '/content/contents/:hashId'>
+  ctx: HandlerContextWithPath<'storage', '/contents/:hashId'>
 ): Promise<IHttpServerComponent.IResponse> {
   if (!IPFSv2.validate(ctx.params.hashId)) return { status: 400 }
 

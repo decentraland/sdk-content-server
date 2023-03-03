@@ -10,9 +10,10 @@ test('acl handler GET /acl/:world_name', function ({ components }) {
     const r = await localFetch.fetch('/acl/my-world.dcl.eth')
 
     expect(r.status).toBe(200)
-    expect(await r.json()).toMatchObject({
+    expect(await r.json()).toEqual({
       resource: 'my-world.dcl.eth',
-      allowed: []
+      allowed: [],
+      timestamp: ''
     })
   })
 })
@@ -32,7 +33,8 @@ test('acl handler GET /acl/:world_name', function ({ components }) {
     expect(r.status).toBe(200)
     expect(await r.json()).toEqual({
       resource: 'my-world.dcl.eth',
-      allowed: []
+      allowed: [],
+      timestamp: ''
     })
   })
 })
@@ -44,7 +46,8 @@ test('acl handler GET /acl/:world_name', function ({ components }) {
     const delegatedIdentity = await getIdentity()
     const ownerIdentity = await getIdentity()
 
-    const payload = `{"resource":"my-world.dcl.eth","allowed":["${delegatedIdentity.realAccount.address}"]}`
+    const ts = new Date().toISOString()
+    const payload = `{"resource":"my-world.dcl.eth","allowed":["${delegatedIdentity.realAccount.address}"],"timestamp":"${ts}"`
 
     await storeJson(storage, 'name-my-world.dcl.eth', {
       entityId: 'bafkreiax5plaxze77tnjbnozga7dsbefdh53horza4adf2xjzxo3k5i4xq',
@@ -56,7 +59,8 @@ test('acl handler GET /acl/:world_name', function ({ components }) {
     expect(r.status).toBe(200)
     expect(await r.json()).toEqual({
       resource: 'my-world.dcl.eth',
-      allowed: []
+      allowed: [],
+      timestamp: ''
     })
   })
 })
@@ -69,7 +73,8 @@ test('acl handler GET /acl/:world_name', function ({ components, stubComponents 
     const delegatedIdentity = await getIdentity()
     const ownerIdentity = await getIdentity()
 
-    const payload = `{"resource":"my-world.dcl.eth","allowed":["${delegatedIdentity.realAccount.address}"]}`
+    const ts = new Date().toISOString()
+    const payload = `{"resource":"my-world.dcl.eth","allowed":["${delegatedIdentity.realAccount.address}"],"timestamp":"${ts}"}`
 
     await storeJson(storage, 'name-my-world.dcl.eth', {
       entityId: 'bafkreiax5plaxze77tnjbnozga7dsbefdh53horza4adf2xjzxo3k5i4xq',
@@ -83,9 +88,10 @@ test('acl handler GET /acl/:world_name', function ({ components, stubComponents 
     const r = await localFetch.fetch('/acl/my-world.dcl.eth')
 
     expect(r.status).toBe(200)
-    expect(await r.json()).toMatchObject({
+    expect(await r.json()).toEqual({
       resource: 'my-world.dcl.eth',
-      allowed: [delegatedIdentity.realAccount.address]
+      allowed: [delegatedIdentity.realAccount.address],
+      timestamp: ts
     })
   })
 })
@@ -106,7 +112,8 @@ test('acl handler POST /acl/:world_name', function ({ components, stubComponents
       .withArgs(identity.authChain.authChain[0].payload, 'my-world.dcl.eth')
       .resolves(true)
 
-    const payload = `{"resource":"my-world.dcl.eth","allowed":["${delegatedIdentity.realAccount.address}"]}`
+    const ts = new Date().toISOString()
+    const payload = `{"resource":"my-world.dcl.eth","allowed":["${delegatedIdentity.realAccount.address}"],"timestamp":"${ts}"}`
 
     const signature = Authenticator.createSignature(identity.realAccount, payload)
     const acl = Authenticator.createSimpleAuthChain(payload, identity.realAccount.address, signature)
@@ -118,7 +125,8 @@ test('acl handler POST /acl/:world_name', function ({ components, stubComponents
     expect(r.status).toEqual(200)
     expect(await r.json()).toEqual({
       resource: 'my-world.dcl.eth',
-      allowed: [delegatedIdentity.realAccount.address]
+      allowed: [delegatedIdentity.realAccount.address],
+      timestamp: ts
     })
 
     const content = await storage.retrieve('name-my-world.dcl.eth')
@@ -138,7 +146,8 @@ test('acl handler POST /acl/:world_name', function ({ components, stubComponents
     const identity = await getIdentity()
     const delegatedIdentity = await getIdentity()
 
-    const payload = `{"resource":"another-world.dcl.eth","allowed":["${delegatedIdentity.realAccount.address}"]}`
+    const ts = new Date().toISOString()
+    const payload = `{"resource":"another-world.dcl.eth","allowed":["${delegatedIdentity.realAccount.address}"],"timestamp":"${ts}"}`
 
     await storeJson(storage, 'name-my-world.dcl.eth', {
       entityId: 'bafkreiax5plaxze77tnjbnozga7dsbefdh53horza4adf2xjzxo3k5i4xq'
@@ -170,7 +179,8 @@ test('acl handler POST /acl/:world_name', function ({ components, stubComponents
 
     const identity = await getIdentity()
 
-    const payload = `{"resource":"my-world.dcl.eth","allowed":["${identity.realAccount.address.toLowerCase()}"]}`
+    const ts = new Date().toISOString()
+    const payload = `{"resource":"my-world.dcl.eth","allowed":["${identity.realAccount.address}"],"timestamp":"${ts}"}`
 
     await storeJson(storage, 'name-my-world.dcl.eth', {
       entityId: 'bafkreiax5plaxze77tnjbnozga7dsbefdh53horza4adf2xjzxo3k5i4xq'
@@ -203,7 +213,8 @@ test('acl handler POST /acl/:world_name', function ({ components, stubComponents
     const identity = await getIdentity()
     const delegatedIdentity = await getIdentity()
 
-    const payload = `{"resource":"my-world.dcl.eth","allowed":{"something":"${delegatedIdentity.realAccount.address}"}}`
+    const ts = new Date().toISOString()
+    const payload = `{"resource":"my-world.dcl.eth","allowed":{"something":"${delegatedIdentity.realAccount.address}"},"timestamp":"${ts}"}`
 
     await storeJson(storage, 'name-my-world.dcl.eth', {
       entityId: 'bafkreiax5plaxze77tnjbnozga7dsbefdh53horza4adf2xjzxo3k5i4xq'
@@ -234,7 +245,8 @@ test('acl handler POST /acl/:world_name', function ({ components, stubComponents
 
     const identity = await getIdentity()
 
-    const payload = `{"resource":"my-world.dcl.eth","allowed":["invalid"]}`
+    const ts = new Date().toISOString()
+    const payload = `{"resource":"my-world.dcl.eth","allowed":["invalid"],"timestamp":"${ts}"}`
 
     await storeJson(storage, 'name-my-world.dcl.eth', {
       entityId: 'bafkreiax5plaxze77tnjbnozga7dsbefdh53horza4adf2xjzxo3k5i4xq'
@@ -266,7 +278,8 @@ test('acl handler POST /acl/:world_name', function ({ components, stubComponents
     const identity = await getIdentity()
     const delegatedIdentity = await getIdentity()
 
-    const payload = `{"resource":"my-world.dcl.eth","allowed":["${delegatedIdentity.realAccount.address}"]}`
+    const ts = new Date().toISOString()
+    const payload = `{"resource":"my-world.dcl.eth","allowed":["${delegatedIdentity.realAccount.address}"],"timestamp":"${ts}"}`
 
     await storeJson(storage, 'name-my-world.dcl.eth', {
       entityId: 'bafkreiax5plaxze77tnjbnozga7dsbefdh53horza4adf2xjzxo3k5i4xq'
@@ -318,8 +331,8 @@ test('acl handler POST /acl/:world_name', function ({ components, stubComponents
 })
 
 test('acl handler POST /acl/:world_name', function ({ components, stubComponents }) {
-  it('fails when the world name does not exist', async () => {
-    const { localFetch, storage } = components
+  it('fails when missing timestamp', async () => {
+    const { localFetch } = components
     const { namePermissionChecker } = stubComponents
 
     const identity = await getIdentity()
@@ -338,15 +351,140 @@ test('acl handler POST /acl/:world_name', function ({ components, stubComponents
       method: 'POST'
     })
 
+    expect(r.status).toEqual(400)
+    expect(await r.json()).toEqual({
+      message: `Invalid ACL, timestamp is missing or has an invalid date.`
+    })
+  })
+})
+
+test('acl handler POST /acl/:world_name', function ({ components, stubComponents }) {
+  it('fails when timestamp is too old', async () => {
+    const { localFetch } = components
+    const { namePermissionChecker } = stubComponents
+
+    const identity = await getIdentity()
+    const delegatedIdentity = await getIdentity()
+
+    namePermissionChecker.checkPermission
+      .withArgs(identity.authChain.authChain[0].payload, 'my-world.dcl.eth')
+      .resolves(true)
+
+    const ts = new Date(Date.now() - 500_000).toISOString()
+    const payload = `{"resource":"my-world.dcl.eth","allowed":["${delegatedIdentity.realAccount.address}"],"timestamp":"${ts}"}`
+
+    const signature = Authenticator.createSignature(identity.realAccount, payload)
+    const acl = Authenticator.createSimpleAuthChain(payload, identity.realAccount.address, signature)
+    const r = await localFetch.fetch('/acl/my-world.dcl.eth', {
+      body: JSON.stringify(acl),
+      method: 'POST'
+    })
+
+    expect(r.status).toEqual(400)
+    expect(await r.json()).toEqual({
+      message: `Timestamp is not recent. Please sign a new ACL change request.`
+    })
+  })
+})
+
+test('acl handler POST /acl/:world_name', function ({ components, stubComponents }) {
+  it('fails when timestamp is too far in the future', async () => {
+    const { localFetch } = components
+    const { namePermissionChecker } = stubComponents
+
+    const identity = await getIdentity()
+    const delegatedIdentity = await getIdentity()
+
+    namePermissionChecker.checkPermission
+      .withArgs(identity.authChain.authChain[0].payload, 'my-world.dcl.eth')
+      .resolves(true)
+
+    const ts = new Date(Date.now() + 500_000).toISOString()
+    const payload = `{"resource":"my-world.dcl.eth","allowed":["${delegatedIdentity.realAccount.address}"],"timestamp":"${ts}"}`
+
+    const signature = Authenticator.createSignature(identity.realAccount, payload)
+    const acl = Authenticator.createSimpleAuthChain(payload, identity.realAccount.address, signature)
+    const r = await localFetch.fetch('/acl/my-world.dcl.eth', {
+      body: JSON.stringify(acl),
+      method: 'POST'
+    })
+
+    expect(r.status).toEqual(400)
+    expect(await r.json()).toEqual({
+      message: `Timestamp is not recent. Please sign a new ACL change request.`
+    })
+  })
+})
+
+test('acl handler POST /acl/:world_name', function ({ components, stubComponents }) {
+  it('fails when new timestamp is after currently stored ACL', async () => {
+    const { localFetch, storage } = components
+    const { namePermissionChecker } = stubComponents
+
+    const identity = await getIdentity()
+    const delegatedIdentity = await getIdentity()
+
+    const ts = new Date().toISOString()
+    const payload = `{"resource":"my-world.dcl.eth","allowed":["${delegatedIdentity.realAccount.address}"],"timestamp":"${ts}"}`
+
+    await storeJson(storage, 'name-my-world.dcl.eth', {
+      entityId: 'bafkreiax5plaxze77tnjbnozga7dsbefdh53horza4adf2xjzxo3k5i4xq',
+      acl: Authenticator.signPayload(identity.authChain, payload)
+    })
+
+    namePermissionChecker.checkPermission
+      .withArgs(identity.authChain.authChain[0].payload, 'my-world.dcl.eth')
+      .resolves(true)
+
+    const newTs = new Date(Date.parse(ts) - 1).toISOString()
+    const newPayload = `{"resource":"my-world.dcl.eth","allowed":["${delegatedIdentity.realAccount.address}"],"timestamp":"${newTs}"}`
+
+    const signature = Authenticator.createSignature(identity.realAccount, newPayload)
+    const acl = Authenticator.createSimpleAuthChain(newPayload, identity.realAccount.address, signature)
+    const r = await localFetch.fetch('/acl/my-world.dcl.eth', {
+      body: JSON.stringify(acl),
+      method: 'POST'
+    })
+
+    expect(r.status).toEqual(400)
+    expect(await r.json()).toEqual({
+      message: 'There is a newer ACL stored. Please sign a new ACL change request.'
+    })
+  })
+})
+
+test('acl handler POST /acl/:world_name', function ({ components, stubComponents }) {
+  it('fails when the world name does not exist', async () => {
+    const { localFetch, storage } = components
+    const { namePermissionChecker } = stubComponents
+
+    const identity = await getIdentity()
+    const delegatedIdentity = await getIdentity()
+
+    namePermissionChecker.checkPermission
+      .withArgs(identity.authChain.authChain[0].payload, 'my-world.dcl.eth')
+      .resolves(true)
+
+    const ts = new Date().toISOString()
+    const payload = `{"resource":"my-world.dcl.eth","allowed":["${delegatedIdentity.realAccount.address}"],"timestamp":"${ts}"}`
+
+    const signature = Authenticator.createSignature(identity.realAccount, payload)
+    const acl = Authenticator.createSimpleAuthChain(payload, identity.realAccount.address, signature)
+    const r = await localFetch.fetch('/acl/my-world.dcl.eth', {
+      body: JSON.stringify(acl),
+      method: 'POST'
+    })
+
     expect(r.status).toEqual(200)
     expect(await r.json()).toEqual({
       resource: 'my-world.dcl.eth',
-      allowed: [delegatedIdentity.realAccount.address]
+      allowed: [delegatedIdentity.realAccount.address],
+      timestamp: ts
     })
 
     const content = await storage.retrieve('name-my-world.dcl.eth')
     const stored = JSON.parse((await streamToBuffer(await content.asStream())).toString())
-    expect(stored).toMatchObject({
+    expect(stored).toEqual({
       acl
     })
   })
