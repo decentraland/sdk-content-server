@@ -1,14 +1,39 @@
-# SDK Content Server
+# Worlds Content Server
 
-This is the simplest content server API needed to deploy and retrieve scenes.
+This is a simple content server API needed to deploy and retrieve scenes.
 
-It uses the `@dcl/catalyst-storage` library to store the deployments directly on the disk or S3.
+It uses the `@dcl/catalyst-storage` library to store the deployments either on the disk or S3.
+
+
+# Running a Worlds Content Server
+## For development
+For development purposes, just clone this repository, build the project and 
+run:
+```bash
+git clone https://github.com/decentraland/worlds-content-server.git
+yarn
+yarn build
+yarn start
+```
+There should be a server running on port 3000.
+
+## For production
+For running a production server, it is recommended to use the docker image 
+published by this repository. It is important to provide proper values for 
+LiveKit configuration using `--env` CLI options, as follows:
+```bash
+docker pull quay.io/decentraland/worlds-content-server
+docker run --name wcs -p 3000:3000 --env COMMS_ADAPTER=livekit --env LIVEKIT_HOST=<your livekit url> --env LIVEKIT_API_KEY=<your api key> --env LIVEKIT_API_SECRET=<your secret>  quay.io/decentraland/worlds-content-server
+```
 
 # Deploying entities to this server
 
 For a deployment to be accepted by this server, the wallet deploying must own a DCL name.
 
-When the scene doesn't specify the name of the world in `scene.json`, the first owned DCL name (in alphabetical order) will be used. When the scene does specify one, that name must be owned by the wallet signing the deployment.
+The scene must specify the name of the world in `scene.json`, and that DCL name must be owned by the wallet signing the deployment.
+
+For more details on deploying scenes please check out [the documentation](https://docs.decentraland.org/creator/worlds/contributor/worlds/about/).
+
 
 ## Deploying using the CLI tool
 
