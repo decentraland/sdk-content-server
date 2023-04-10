@@ -62,7 +62,7 @@ urn:decentraland:entity:bafkreihpipyhrt75xyquwrynrtjadwb373xfosy7a5rhlh5vogjajye
 That deployment will be downloaded from the configured content server by default. But for testing purposes, the content servers are not always the most straight forward way to test. To help the operations, a baseUrl query parameter can be added: `?baseUrl=https://worlds-content-server.decentraland.org/contents/` yielding a full URN like this:
 
 ```
-urn:decentraland:entity:bafkreihpipyhrt75xyquwrynrtjadwb373xfosy7a5rhlh5vogjajye3im?baseUrl=https://worlds-content-server.decentraland.org/contents/
+urn:decentraland:entity:bafkreihpipyhrt75xyquwrynrtjadwb373xfosy7a5rhlh5vogjajye3im?=&baseUrl=https://worlds-content-server.decentraland.org/contents/
 ```
 
 Now the explorers know where to look for when downloading that entity, bypassing the content servers. Or more precisely, pointing to this server which acts as content server.
@@ -71,9 +71,9 @@ Now the explorers know where to look for when downloading that entity, bypassing
 
 As of the moment of writing this document, there are two ways to use the addressable URNs: as global portable experiences and as single scene instead of loading the genesis city.
 
-The first one is used to generate experiences for all users, like the pride event calendar. It can be tested by adding the `GLOBAL_PX=<urn>` query parameter to the explorer. Like this https://play.decentraland.zone/?GLOBAL_PX=urn:decentraland:entity:bafkreihpipyhrt75xyquwrynrtjadwb373xfosy7a5rhlh5vogjajye3im?baseUrl=https://worlds-content-server.decentraland.org/contents/
+The first one is used to generate experiences for all users, like the pride event calendar. It can be tested by adding the `GLOBAL_PX=<urn>` query parameter to the explorer. Like this https://play.decentraland.zone/?GLOBAL_PX=urn:decentraland:entity:bafkreihpipyhrt75xyquwrynrtjadwb373xfosy7a5rhlh5vogjajye3im?=&baseUrl=https://worlds-content-server.decentraland.org/contents/
 
-The second use case is to load a singular scene instead of the full genesis city. Likewise, it is done via adding a `SPACE=<urn>` query parameter, like this: https://play.decentraland.zone/?SPACE=urn:decentraland:entity:bafkreihpipyhrt75xyquwrynrtjadwb373xfosy7a5rhlh5vogjajye3im?baseUrl=https://worlds-content-server.decentraland.org/contents/
+The second use case is to load a singular scene instead of the full genesis city. Likewise, it is done via adding a `SPACE=<urn>` query parameter, like this: https://play.decentraland.zone/?SPACE=urn:decentraland:entity:bafkreihpipyhrt75xyquwrynrtjadwb373xfosy7a5rhlh5vogjajye3im?=&baseUrl=https://worlds-content-server.decentraland.org/contents/
 
 Portable experiences and single scenes (spaces) can be used at the same time to generate dynamic experiences.
 
