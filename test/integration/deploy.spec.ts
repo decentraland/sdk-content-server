@@ -32,7 +32,15 @@ test('deployment works', function ({ components, stubComponents }) {
       files: entityFiles,
       metadata: {
         worldConfiguration: {
-          name: 'my-super-name.dcl.eth'
+          name: 'my-super-name.dcl.eth',
+          miniMapConfig: {
+            enabled: true,
+            dataImage: 'abc.txt',
+            estateImage: 'abc.txt'
+          },
+          skyboxConfig: {
+            textures: ['abc.txt']
+          }
         }
       }
     })

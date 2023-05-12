@@ -91,6 +91,90 @@ test('world about handler /world/:world_name/about', function ({ components }) {
         }
       }
     })
+
+    await storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', {
+      metadata: {
+        worldConfiguration: {
+          miniMapConfig: { visible: true }
+        }
+      }
+    })
+    const r2 = await localFetch.fetch('/world/some-name.dcl.eth/about')
+    expect(r2.status).toEqual(200)
+    expect(await r2.json()).toMatchObject({
+      configurations: {
+        minimap: {
+          enabled: true,
+          dataImage: 'https://api.decentraland.org/v1/minimap.png',
+          estateImage: 'https://api.decentraland.org/v1/estatemap.png'
+        }
+      }
+    })
+
+    await storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', {
+      metadata: {
+        worldConfiguration: {
+          minimapVisible: false,
+          miniMapConfig: {
+            dataImage: 'black_image.png',
+            estateImage: 'black_image.png'
+          }
+        }
+      },
+      content: [
+        {
+          file: 'black_image.png',
+          hash: 'bafkreidduubi76bntd27dewz4cvextrfl3qyd4td6mtztuisxi26q64dnq'
+        }
+      ]
+    })
+    const r3 = await localFetch.fetch('/world/some-name.dcl.eth/about')
+    expect(r3.status).toEqual(200)
+    expect(await r3.json()).toMatchObject({
+      configurations: {
+        minimap: {
+          enabled: false,
+          dataImage: 'https://0.0.0.0:3000/contents/bafkreidduubi76bntd27dewz4cvextrfl3qyd4td6mtztuisxi26q64dnq',
+          estateImage: 'https://0.0.0.0:3000/contents/bafkreidduubi76bntd27dewz4cvextrfl3qyd4td6mtztuisxi26q64dnq'
+        }
+      }
+    })
+  })
+})
+
+test('world about handler /world/:world_name/about', function ({ components }) {
+  it('when world exists and has skybox textures it responds', async () => {
+    const { localFetch, storage } = components
+
+    await storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', {
+      metadata: {
+        worldConfiguration: {
+          name: 'some-name.dcl.eth',
+          skyboxConfig: {
+            textures: ['black_image.png']
+          }
+        }
+      },
+      content: [
+        {
+          file: 'black_image.png',
+          hash: 'bafkreidduubi76bntd27dewz4cvextrfl3qyd4td6mtztuisxi26q64dnq'
+        }
+      ]
+    })
+    await storeJson(storage, 'name-some-name.dcl.eth', {
+      entityId: 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y'
+    })
+
+    const r = await localFetch.fetch('/world/some-name.dcl.eth/about')
+    expect(r.status).toEqual(200)
+    expect(await r.json()).toMatchObject({
+      configurations: {
+        skybox: {
+          textures: ['https://0.0.0.0:3000/contents/bafkreidduubi76bntd27dewz4cvextrfl3qyd4td6mtztuisxi26q64dnq']
+        }
+      }
+    })
   })
 })
 

@@ -5,6 +5,7 @@ import {
   AboutResponse_SkyboxConfiguration
 } from '@dcl/protocol/out-js/decentraland/bff/http_endpoints.gen'
 import { streamToBuffer } from '@dcl/catalyst-storage/dist/content-item'
+import { ContentMapping } from '@dcl/schemas/dist/misc/content-mapping'
 
 export async function worldAboutHandler({
   params,
@@ -44,17 +45,41 @@ export async function worldAboutHandler({
   const contentStatus = await status.getContentStatus()
   const lambdasStatus = await status.getLambdasStatus()
 
-  const minimap: AboutResponse_MinimapConfiguration = {
-    enabled: sceneJson.metadata.worldConfiguration?.minimapVisible || false
+  function urlForFile(filename: string, defaultImage: string = ''): string {
+    if (filename) {
+      const file = sceneJson.content.find((content: ContentMapping) => content.file === filename)
+      if (file) {
+        return `${baseUrl}/contents/${file.hash}`
+      }
+    }
+    return defaultImage
   }
-  if (sceneJson.metadata.worldConfiguration?.minimapVisible) {
-    // TODO We may need to allow the scene creator to specify these values
-    minimap.dataImage = 'https://api.decentraland.org/v1/minimap.png'
-    minimap.estateImage = 'https://api.decentraland.org/v1/estatemap.png'
+
+  const minimap: AboutResponse_MinimapConfiguration = {
+    enabled:
+      sceneJson.metadata.worldConfiguration?.minimapVisible ||
+      sceneJson.metadata.worldConfiguration?.miniMapConfig?.visible ||
+      false
+  }
+  if (minimap.enabled || sceneJson.metadata.worldConfiguration?.miniMapConfig?.dataImage) {
+    minimap.dataImage = urlForFile(
+      sceneJson.metadata.worldConfiguration?.miniMapConfig?.dataImage,
+      'https://api.decentraland.org/v1/minimap.png'
+    )
+  }
+  if (minimap.enabled || sceneJson.metadata.worldConfiguration?.miniMapConfig?.estateImage) {
+    minimap.estateImage = urlForFile(
+      sceneJson.metadata.worldConfiguration?.miniMapConfig?.estateImage,
+      'https://api.decentraland.org/v1/estatemap.png'
+    )
   }
 
   const skybox: AboutResponse_SkyboxConfiguration = {
-    fixedHour: sceneJson.metadata.worldConfiguration?.skybox
+    fixedHour:
+      sceneJson.metadata.worldConfiguration?.skyboxConfig?.fixedHour || sceneJson.metadata.worldConfiguration?.skybox,
+    textures: sceneJson.metadata.worldConfiguration?.skyboxConfig?.textures
+      ? sceneJson.metadata.worldConfiguration?.skyboxConfig?.textures.map((texture: string) => urlForFile(texture))
+      : undefined
   }
 
   const healthy = contentStatus.healthy && lambdasStatus.healthy

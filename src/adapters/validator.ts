@@ -9,6 +9,7 @@ import {
 import { AuthChain, Entity, EthAddress, IPFSv2 } from '@dcl/schemas'
 import { Authenticator } from '@dcl/crypto'
 import { hashV1 } from '@dcl/hashing'
+import { ContentMapping } from '@dcl/schemas/dist/misc/content-mapping'
 
 const createValidationResult = (errors: string[]) => {
   return {
@@ -259,6 +260,49 @@ export const validateSdkVersion: Validation = async (
   return OK
 }
 
+export const validateMiniMapImages: Validation = async (
+  components: ValidatorComponents,
+  deployment: DeploymentToValidate
+): Promise<ValidationResult> => {
+  const sceneJson = JSON.parse(deployment.files.get(deployment.entity.id)!.toString())
+
+  const errors: string[] = []
+
+  for (const imageFile of [
+    sceneJson.metadata.worldConfiguration?.miniMapConfig?.dataImage,
+    sceneJson.metadata.worldConfiguration?.miniMapConfig?.estateImage
+  ]) {
+    if (imageFile) {
+      const isFilePresent = sceneJson.content.some((content: ContentMapping) => content.file === imageFile)
+      if (!isFilePresent) {
+        errors.push(`The file ${imageFile} is not present in the entity.`)
+      }
+    }
+  }
+
+  return createValidationResult(errors)
+}
+
+export const validateSkyboxTextures: Validation = async (
+  components: ValidatorComponents,
+  deployment: DeploymentToValidate
+): Promise<ValidationResult> => {
+  const sceneJson = JSON.parse(deployment.files.get(deployment.entity.id)!.toString())
+
+  const errors: string[] = []
+
+  for (const textureFile of sceneJson.metadata.worldConfiguration?.skyboxConfig?.textures || []) {
+    if (textureFile) {
+      const isFilePresent = sceneJson.content.some((content: ContentMapping) => content.file === textureFile)
+      if (!isFilePresent) {
+        errors.push(`The texture file ${textureFile} is not present in the entity.`)
+      }
+    }
+  }
+
+  return createValidationResult(errors)
+}
+
 const quickValidations: Validation[] = [
   validateEntityId,
   validateEntity,
@@ -267,7 +311,9 @@ const quickValidations: Validation[] = [
   validateSignature,
   validateDeploymentTtl,
   validateSceneDimensions,
-  validateFiles
+  validateFiles,
+  validateMiniMapImages,
+  validateSkyboxTextures
   // validateSdkVersion TODO re-enable (and test) once SDK7 is ready
 ]
 
