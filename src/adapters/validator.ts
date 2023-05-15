@@ -283,6 +283,21 @@ export const validateMiniMapImages: Validation = async (
   return createValidationResult(errors)
 }
 
+export const validateThumbnail: Validation = async (
+  components: ValidatorComponents,
+  deployment: DeploymentToValidate
+): Promise<ValidationResult> => {
+  const sceneThumbnail = deployment.entity.metadata?.display?.navmapThumbnail
+  if (sceneThumbnail) {
+    const isFilePresent = deployment.entity.content.some((content: ContentMapping) => content.file === sceneThumbnail)
+    if (!isFilePresent) {
+      return createValidationResult([`Scene thumbnail '${sceneThumbnail}' must be a file included in the deployment.`])
+    }
+  }
+
+  return OK
+}
+
 export const validateSkyboxTextures: Validation = async (
   components: ValidatorComponents,
   deployment: DeploymentToValidate
@@ -313,7 +328,8 @@ const quickValidations: Validation[] = [
   validateSceneDimensions,
   validateFiles,
   validateMiniMapImages,
-  validateSkyboxTextures
+  validateSkyboxTextures,
+  validateThumbnail
   // validateSdkVersion TODO re-enable (and test) once SDK7 is ready
 ]
 

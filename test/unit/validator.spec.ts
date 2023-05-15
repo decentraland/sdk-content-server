@@ -13,7 +13,8 @@ import {
   validateSignature,
   validateSigner,
   validateSize,
-  validateSkyboxTextures
+  validateSkyboxTextures,
+  validateThumbnail
 } from '../../src/adapters/validator'
 import { createInMemoryStorage, IContentStorageComponent } from '@dcl/catalyst-storage'
 import {
@@ -341,6 +342,40 @@ describe('validator', function () {
     expect(result.ok()).toBeFalsy()
     expect(result.errors).toContain('The texture file xyz.png is not present in the entity.')
   })
+
+  it('validateThumbnail with absolute URL errors', async () => {
+    const deployment = await createDeployment(identity.authChain, {
+      type: EntityType.SCENE,
+      pointers: ['0,0'],
+      timestamp: Date.now(),
+      metadata: {
+        display: {
+          navmapThumbnail: 'https://example.com/image.png'
+        }
+      }
+    })
+    const result = await validateThumbnail(components, deployment)
+    expect(result.ok()).toBeFalsy()
+    expect(result.errors).toContain(
+      "Scene thumbnail 'https://example.com/image.png' must be a file included in the deployment."
+    )
+  })
+
+  it('validateThumbnail with missing file errors', async () => {
+    const deployment = await createDeployment(identity.authChain, {
+      type: EntityType.SCENE,
+      pointers: ['0,0'],
+      timestamp: Date.now(),
+      metadata: {
+        display: {
+          navmapThumbnail: 'image.png'
+        }
+      }
+    })
+    const result = await validateThumbnail(components, deployment)
+    expect(result.ok()).toBeFalsy()
+    expect(result.errors).toContain("Scene thumbnail 'image.png' must be a file included in the deployment.")
+  })
 })
 
 async function createDeployment(identityAuthChain: AuthIdentity, entity?: any) {
@@ -352,7 +387,13 @@ async function createDeployment(identityAuthChain: AuthIdentity, entity?: any) {
     type: EntityType.SCENE,
     pointers: ['0,0'],
     timestamp: Date.now(),
-    metadata: { runtimeVersion: '7', worldConfiguration: { name: 'whatever.dcl.eth' } },
+    metadata: {
+      runtimeVersion: '7',
+      worldConfiguration: { name: 'whatever.dcl.eth' },
+      display: {
+        navmapThumbnail: 'abc.txt'
+      }
+    },
     files: entityFiles
   }
   const { files, entityId } = await DeploymentBuilder.buildEntity(sceneJson)
