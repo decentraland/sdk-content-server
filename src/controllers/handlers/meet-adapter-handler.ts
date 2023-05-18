@@ -2,16 +2,17 @@ import { HandlerContextWithPath } from '../../types'
 import { IHttpServerComponent } from '@well-known-components/interfaces'
 import { DecentralandSignatureContext } from 'decentraland-crypto-middleware/lib/types'
 import verify from 'decentraland-crypto-middleware/lib/verify'
+import { allowedByAcl } from '../../logic/acl'
 
 export async function meetAdapterHandler(
   context: HandlerContextWithPath<
-    'commsAdapter' | 'config' | 'storage' | 'namePermissionChecker',
+    'commsAdapter' | 'config' | 'storage' | 'namePermissionChecker' | 'worldsManager',
     '/meet-adapter/:roomId'
   > &
     DecentralandSignatureContext<any>
 ): Promise<IHttpServerComponent.IResponse> {
   const {
-    components: { commsAdapter, config, storage, namePermissionChecker }
+    components: { commsAdapter, config, storage }
   } = context
 
   const baseUrl = ((await config.getString('HTTP_BASE_URL')) || `https://${context.url.host}`).toString()
@@ -59,7 +60,7 @@ export async function meetAdapterHandler(
     }
   }
 
-  const hasPermission = await namePermissionChecker.checkPermission(context.verification!.auth, worldName)
+  const hasPermission = await allowedByAcl(context.components, context.verification!.auth, worldName)
   if (!hasPermission) {
     return {
       status: 401,

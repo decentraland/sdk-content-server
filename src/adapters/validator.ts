@@ -1,15 +1,9 @@
-import {
-  AccessControlList,
-  DeploymentToValidate,
-  Validation,
-  ValidationResult,
-  Validator,
-  ValidatorComponents
-} from '../types'
+import { DeploymentToValidate, Validation, ValidationResult, Validator, ValidatorComponents } from '../types'
 import { AuthChain, Entity, EthAddress, IPFSv2 } from '@dcl/schemas'
 import { Authenticator } from '@dcl/crypto'
 import { hashV1 } from '@dcl/hashing'
 import { ContentMapping } from '@dcl/schemas/dist/misc/content-mapping'
+import { allowedByAcl } from '../logic/acl'
 
 const createValidationResult = (errors: string[]) => {
   return {
@@ -113,36 +107,14 @@ export const validateDeploymentPermission: Validation = async (
   const worldSpecifiedName = sceneJson.metadata.worldConfiguration.name
   const signer = deployment.authChain[0].payload
 
-  const hasPermission = await components.namePermissionChecker.checkPermission(signer, worldSpecifiedName)
-  if (!hasPermission) {
-    async function allowedByAcl(worldName: string, address: EthAddress): Promise<boolean> {
-      const worldMetadata = await components.worldsManager.getMetadataForWorld(worldName)
-      if (!worldMetadata || !worldMetadata.acl) {
-        // No acl -> no permission
-        return false
-      }
-
-      const acl = JSON.parse(worldMetadata.acl.slice(-1).pop()!.payload) as AccessControlList
-      const isAllowed = acl.allowed.some((allowedAddress) => allowedAddress.toLowerCase() === address.toLowerCase())
-      if (!isAllowed) {
-        // There is acl but requested address is not included in the allowed ones
-        return false
-      }
-
-      // The acl allows permissions, finally check that the signer of the acl still owns the world
-      const aclSigner = worldMetadata.acl[0].payload
-      return components.namePermissionChecker.checkPermission(aclSigner, worldName)
-    }
-
-    const allowed = await allowedByAcl(worldSpecifiedName, signer)
-    if (!allowed) {
-      return createValidationResult([
-        `Deployment failed: Your wallet has no permission to publish this scene because it does not have permission to deploy under "${worldSpecifiedName}". Check scene.json to select a name that either you own or you were given permission to deploy.`
-      ])
-    }
+  const allowed = await allowedByAcl(components, worldSpecifiedName, signer)
+  if (allowed) {
+    return OK
   }
 
-  return OK
+  return createValidationResult([
+    `Deployment failed: Your wallet has no permission to publish this scene because it does not have permission to deploy under "${worldSpecifiedName}". Check scene.json to select a name that either you own or you were given permission to deploy.`
+  ])
 }
 
 export const validateSceneDimensions: Validation = async (
