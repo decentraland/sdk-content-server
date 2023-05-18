@@ -60,7 +60,7 @@ export async function meetAdapterHandler(
     }
   }
 
-  const hasPermission = await allowedByAcl(context.components, context.verification!.auth, worldName)
+  const hasPermission = await allowedByAcl(context.components, worldName, context.verification!.auth)
   if (!hasPermission) {
     return {
       status: 401,
