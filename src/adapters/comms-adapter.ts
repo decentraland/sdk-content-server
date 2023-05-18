@@ -116,9 +116,10 @@ function createLiveKitAdapter(
         })
     },
 
-    async connectionString(userId: string, roomId: string): Promise<string> {
+    async connectionString(userId: string, roomId: string, name: string | undefined = undefined): Promise<string> {
       const token = new AccessToken(apiKey, apiSecret, {
         identity: userId,
+        name,
         ttl: 5 * 60 // 5 minutes
       })
       token.addGrant({ roomJoin: true, room: roomId, canPublish: true, canSubscribe: true })

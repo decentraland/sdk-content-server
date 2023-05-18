@@ -81,7 +81,7 @@ export type StatusResponse = {
 }
 
 export type ICommsAdapter = {
-  connectionString(ethAddress: EthAddress, roomId: string): Promise<string>
+  connectionString(ethAddress: EthAddress, roomId: string, name?: string): Promise<string>
   status(): Promise<CommsStatus>
 }
 

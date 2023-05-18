@@ -74,7 +74,8 @@ export async function meetAdapterHandler(
     body: {
       fixedAdapter: await commsAdapter.connectionString(
         '0x0000000000000000000000000000000000000000',
-        context.params.roomId
+        context.params.roomId,
+        worldName
       )
     }
   }
