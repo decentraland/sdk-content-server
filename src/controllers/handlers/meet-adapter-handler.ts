@@ -72,7 +72,10 @@ export async function meetAdapterHandler(
   return {
     status: 200,
     body: {
-      fixedAdapter: await commsAdapter.connectionString(`${worldName}-publisher`, context.params.roomId)
+      fixedAdapter: await commsAdapter.connectionString(
+        '0x0000000000000000000000000000000000000000',
+        context.params.roomId
+      )
     }
   }
 }
