@@ -11,4 +11,5 @@ jobs:
     with:
       service-name: worlds-content-server
       dockerfile-url: https://raw.githubusercontent.com/decentraland/platform-actions/main/Dockerfile.alpine
+      deployment-environment: dev
     secrets: inherit
