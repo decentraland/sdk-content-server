@@ -13,7 +13,9 @@ export async function getIndexHandler(
   // Transform to URLs
   for (const worldData of indexData.index) {
     for (const scene of worldData.scenes) {
-      scene.thumbnail = `${baseUrl}/contents/${scene.thumbnail}`
+      if (scene.thumbnail) {
+        scene.thumbnail = `${baseUrl}/contents/${scene.thumbnail}`
+      }
     }
   }
 

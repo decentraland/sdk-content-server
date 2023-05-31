@@ -16,7 +16,7 @@ export async function createWorldsManagerComponent({
     fetchMethod: async (_, staleValue): Promise<string[]> => {
       try {
         const worlds = []
-        for await (const key of await storage.allFileIds('name-')) {
+        for await (const key of storage.allFileIds('name-')) {
           worlds.push(key.substring(5)) // remove "name-" prefix
         }
         return worlds

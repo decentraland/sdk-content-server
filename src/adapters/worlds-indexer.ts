@@ -32,7 +32,7 @@ export async function createWorldsIndexerComponent({
             id: entity.id,
             title: entity.metadata?.display?.title,
             description: entity.metadata?.display?.description,
-            thumbnail: thumbnailFile!.hash,
+            thumbnail: thumbnailFile?.hash,
             pointers: entity.pointers,
             runtimeVersion: entity.metadata?.runtimeVersion,
             timestamp: entity.timestamp
@@ -49,12 +49,7 @@ export async function createWorldsIndexerComponent({
   }
 
   async function getIndex(): Promise<WorldsIndex> {
-    let content
-    try {
-      content = await storage.retrieve(GLOBAL_INDEX_FILE)
-    } catch (e: any) {
-      logger.warn(`Error retrieving index file: ${e.message}`)
-    }
+    const content = await storage.retrieve(GLOBAL_INDEX_FILE)
 
     let index: WorldsIndex
 

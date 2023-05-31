@@ -74,7 +74,7 @@ export type SceneData = {
   id: string
   title: string
   description: string
-  thumbnail: string
+  thumbnail?: string
   pointers: string[]
   timestamp: number
   runtimeVersion?: string
