@@ -32,7 +32,7 @@ export async function worldAboutHandler({
   }
   const sceneJson = JSON.parse((await streamToBuffer(await scene?.asStream())).toString())
 
-  const baseUrl = ((await config.getString('HTTP_BASE_URL')) || `https://${url.host}`).toString()
+  const baseUrl = (await config.getString('HTTP_BASE_URL')) || `${url.protocol}//${url.host}`
 
   const urn = `urn:decentraland:entity:${entityId}?=&baseUrl=${baseUrl}/contents/`
 

@@ -66,33 +66,5 @@ test('consume status endpoint', function ({ components }) {
         }
       })
     }
-
-    {
-      // With authentication deployedWorlds is retrieved
-      const r = await localFetch.fetch('/status', {
-        headers: {
-          Authorization: 'Bearer changeme'
-        }
-      })
-
-      expect(r.status).toEqual(200)
-      expect(await r.json()).toMatchObject({
-        content: {
-          commitHash: 'unknown',
-          worldsCount: 1,
-          details: ['some-name.dcl.eth']
-        },
-        comms: {
-          rooms: 1,
-          users: 2,
-          details: [
-            {
-              worldName: 'mariano.dcl.eth',
-              users: 2
-            }
-          ]
-        }
-      })
-    }
   })
 })

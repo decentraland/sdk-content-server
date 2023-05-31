@@ -5,7 +5,7 @@ slug: "/contributor/catalyst/about"
 
 In this document you will learn how to use Decentraland Worlds, a new content server that lets you deploy isolated scenes which are accessible by the Decentraland explorer. 
 
-The name **Worlds** was given to scenes that exists outside of the Genesis City boundaries. Worlds can be used to do experiments or as a Scenes Preview Service to tests experiences before uploading them to the Genesis City. Worlds are attached to [Decentraland NAMEs](https://builder.decentraland.org/names) and the NAMEs can be used as realms.  
+The name **Worlds** was given to scenes that exists outside the Genesis City boundaries. Worlds can be used to do experiments or as a Scenes Preview Service to tests experiences before uploading them to the Genesis City. Worlds are attached to [Decentraland NAMEs](https://builder.decentraland.org/names) and the NAMEs can be used as realms.  
 
 ### WARNINGS: The Worlds server is in ALPHA version
 
@@ -33,4 +33,4 @@ Once a scene is uploaded to the Worlds server you can access it by using the Dec
 
 - Even if you withhold more than one name, only one deployment per account is supported at this time.
 - The upload size limit is the same as a deployment to a Catalyst (200MB) 
-- Once uploaded, it cannot be destroyed but you may override it with a new deployment
+- Once uploaded, it cannot be destroyed, but you may override it with a new deployment

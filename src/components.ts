@@ -3,10 +3,12 @@ import { createServerComponent, createStatusCheckComponent } from '@well-known-c
 import { createLogComponent } from '@well-known-components/logger'
 import { createFetchComponent } from './adapters/fetch'
 import { createMetricsComponent } from '@well-known-components/metrics'
-import { createSubgraphComponent } from '@well-known-components/thegraph-component'
+import {
+  createSubgraphComponent,
+  metricDeclarations as theGraphMetricDeclarations
+} from '@well-known-components/thegraph-component'
 import { AppComponents, GlobalContext, ICommsAdapter, IWorldNamePermissionChecker, SnsComponent } from './types'
 import { metricDeclarations } from './metrics'
-import { metricDeclarations as theGraphMetricDeclarations } from '@well-known-components/thegraph-component'
 import { HTTPProvider } from 'eth-connect'
 import {
   createAwsS3BasedFileSystemContentStorage,
@@ -19,6 +21,7 @@ import { createDclNameChecker, createOnChainDclNameChecker } from './adapters/dc
 import { createLimitsManagerComponent } from './adapters/limits-manager'
 import { createWorldsManagerComponent } from './adapters/worlds-manager'
 import { createCommsAdapterComponent } from './adapters/comms-adapter'
+import { createWorldsIndexerComponent } from './adapters/worlds-indexer'
 
 async function determineNameValidator(
   components: Pick<AppComponents, 'config' | 'ethereumProvider' | 'logs' | 'marketplaceSubGraph'>
@@ -39,12 +42,6 @@ async function determineNameValidator(
 export async function initComponents(): Promise<AppComponents> {
   const config = await createDotEnvConfigComponent({ path: ['.env.default', '.env'] })
   const logs = await createLogComponent({ config })
-
-  const logger = logs.getLogger('components')
-  const secret = await config.getString('AUTH_SECRET')
-  if (!secret) {
-    logger.warn('No secret defined, deployed worlds will not be returned.')
-  }
 
   const server = await createServerComponent<GlobalContext>({ config, logs }, { cors: {} })
   const statusChecks = await createStatusCheckComponent({ server, config })
@@ -89,6 +86,11 @@ export async function initComponents(): Promise<AppComponents> {
   const limitsManager = await createLimitsManagerComponent({ config, fetch, logs })
 
   const worldsManager = await createWorldsManagerComponent({ logs, storage })
+  const worldsIndexer = await createWorldsIndexerComponent({
+    logs,
+    storage,
+    worldsManager
+  })
 
   const validator = createValidator({
     config,
@@ -102,19 +104,20 @@ export async function initComponents(): Promise<AppComponents> {
   return {
     commsAdapter,
     config,
-    namePermissionChecker,
-    logs,
-    server,
-    statusChecks,
-    fetch,
-    metrics,
     ethereumProvider,
-    storage,
-    marketplaceSubGraph,
+    fetch,
     limitsManager,
+    logs,
+    marketplaceSubGraph,
+    metrics,
+    namePermissionChecker,
+    server,
     sns,
     status,
+    statusChecks,
+    storage,
     validator,
+    worldsIndexer,
     worldsManager
   }
 }

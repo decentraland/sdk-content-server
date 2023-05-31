@@ -11,7 +11,8 @@ export async function commsAdapterHandler(
     components: { commsAdapter, config, storage }
   } = context
 
-  const baseUrl = ((await config.getString('HTTP_BASE_URL')) || `https://${context.url.host}`).toString()
+  const baseUrl = (await config.getString('HTTP_BASE_URL')) || `${context.url.protocol}//${context.url.host}`
+
   const path = new URL(baseUrl + context.url.pathname)
 
   try {

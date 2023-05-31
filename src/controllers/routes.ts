@@ -8,7 +8,9 @@ import { statusHandler } from './handlers/status-handler'
 import { commsAdapterHandler } from './handlers/comms-adapter-handler'
 import { activeEntitiesHandler } from './handlers/active-entities'
 import { getAclHandler, postAclHandler } from './handlers/acl-handlers'
+import { getIndexHandler } from './handlers/index-handler'
 import { meetAdapterHandler } from './handlers/meet-adapter-handler'
+import { getLiveDataHandler } from './handlers/live-data-handler'
 
 export async function setupRouter(_globalContext: GlobalContext): Promise<Router<GlobalContext>> {
   const router = new Router<GlobalContext>()
@@ -31,6 +33,9 @@ export async function setupRouter(_globalContext: GlobalContext): Promise<Router
   router.post('/acl/:world_name', postAclHandler)
 
   router.get('/status', statusHandler)
+
+  router.get('/index', getIndexHandler)
+  router.get('/live-data', getLiveDataHandler)
 
   router.post('/get-comms-adapter/:roomId', commsAdapterHandler)
   router.post('/meet-adapter/:roomId', meetAdapterHandler)

@@ -49,7 +49,7 @@ test('world about handler /world/:world_name/about', function ({ components }) {
       configurations: {
         networkId: 5,
         globalScenesUrn: [],
-        scenesUrn: [`urn:decentraland:entity:${ENTITY_CID}?=&baseUrl=https://0.0.0.0:3000/contents/`],
+        scenesUrn: [`urn:decentraland:entity:${ENTITY_CID}?=&baseUrl=http://0.0.0.0:3000/contents/`],
         minimap: { enabled: false },
         skybox: {},
         realmName: ENS
@@ -59,7 +59,7 @@ test('world about handler /world/:world_name/about', function ({ components }) {
       comms: {
         healthy: true,
         protocol: 'v3',
-        fixedAdapter: `signed-login:https://0.0.0.0:3000/get-comms-adapter/world-${ENS}`
+        fixedAdapter: `signed-login:http://0.0.0.0:3000/get-comms-adapter/world-${ENS}`
       }
     })
   })
@@ -134,8 +134,8 @@ test('world about handler /world/:world_name/about', function ({ components }) {
       configurations: {
         minimap: {
           enabled: false,
-          dataImage: 'https://0.0.0.0:3000/contents/bafkreidduubi76bntd27dewz4cvextrfl3qyd4td6mtztuisxi26q64dnq',
-          estateImage: 'https://0.0.0.0:3000/contents/bafkreidduubi76bntd27dewz4cvextrfl3qyd4td6mtztuisxi26q64dnq'
+          dataImage: 'http://0.0.0.0:3000/contents/bafkreidduubi76bntd27dewz4cvextrfl3qyd4td6mtztuisxi26q64dnq',
+          estateImage: 'http://0.0.0.0:3000/contents/bafkreidduubi76bntd27dewz4cvextrfl3qyd4td6mtztuisxi26q64dnq'
         }
       }
     })
@@ -171,7 +171,7 @@ test('world about handler /world/:world_name/about', function ({ components }) {
     expect(await r.json()).toMatchObject({
       configurations: {
         skybox: {
-          textures: ['https://0.0.0.0:3000/contents/bafkreidduubi76bntd27dewz4cvextrfl3qyd4td6mtztuisxi26q64dnq']
+          textures: ['http://0.0.0.0:3000/contents/bafkreidduubi76bntd27dewz4cvextrfl3qyd4td6mtztuisxi26q64dnq']
         }
       }
     })

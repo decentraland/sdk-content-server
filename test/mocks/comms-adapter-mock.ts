@@ -15,10 +15,11 @@ export function createMockCommsAdapterComponent(): ICommsAdapter {
         rooms: 1,
         details: [
           {
-            worldName: 'mariano.dcl.eth',
+            worldName: 'world-name.dcl.eth',
             users: 2
           }
-        ]
+        ],
+        timestamp: Date.now()
       })
     }
   }

@@ -142,7 +142,7 @@ export async function deployEntity(
       worldName
     )
 
-    const baseUrl = ((await ctx.components.config.getString('HTTP_BASE_URL')) || `https://${ctx.url.host}`).toString()
+    const baseUrl = (await ctx.components.config.getString('HTTP_BASE_URL')) || `https://${ctx.url.host}`
 
     ctx.components.metrics.increment('world_deployments_counter')
 

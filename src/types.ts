@@ -1,9 +1,9 @@
 import type { IFetchComponent } from '@well-known-components/http-server'
 import type {
-  IConfigComponent,
-  ILoggerComponent,
-  IHttpServerComponent,
   IBaseComponent,
+  IConfigComponent,
+  IHttpServerComponent,
+  ILoggerComponent,
   IMetricsComponent
 } from '@well-known-components/interfaces'
 import { metricDeclarations } from './metrics'
@@ -61,10 +61,24 @@ export type IWorldNamePermissionChecker = {
 export type ContentStatus = {
   commitHash: string
   worldsCount: number
-  details?: string[]
 }
 
 export type WorldStatus = { worldName: string; users: number }
+
+export type WorldData = {
+  name: string
+  scenes: SceneData[]
+}
+
+export type SceneData = {
+  id: string
+  title: string
+  description: string
+  thumbnail: string
+  pointers: string[]
+  timestamp: number
+  runtimeVersion?: string
+}
 
 export type CommsStatus = {
   adapterType: string
@@ -73,6 +87,7 @@ export type CommsStatus = {
   users: number
   rooms: number
   details?: WorldStatus[]
+  timestamp: number
 }
 
 export type StatusResponse = {
@@ -100,22 +115,32 @@ export type IWorldsManager = {
   storeAcl(worldName: string, acl: AuthChain): Promise<void>
 }
 
+export type WorldsIndex = {
+  index: WorldData[]
+  timestamp: number
+}
+
+export type IWorldsIndexer = {
+  getIndex(): Promise<WorldsIndex>
+}
+
 // components used in every environment
 export type BaseComponents = {
   commsAdapter: ICommsAdapter
   config: IConfigComponent
-  namePermissionChecker: IWorldNamePermissionChecker
-  logs: ILoggerComponent
-  server: IHttpServerComponent<GlobalContext>
-  fetch: IFetchComponent
-  metrics: IMetricsComponent<keyof typeof metricDeclarations>
   ethereumProvider: HTTPProvider
-  storage: IContentStorageComponent
-  marketplaceSubGraph: ISubgraphComponent
+  fetch: IFetchComponent
   limitsManager: ILimitsManager
-  status: IStatusComponent
+  logs: ILoggerComponent
+  marketplaceSubGraph: ISubgraphComponent
+  metrics: IMetricsComponent<keyof typeof metricDeclarations>
+  namePermissionChecker: IWorldNamePermissionChecker
+  server: IHttpServerComponent<GlobalContext>
   sns: SnsComponent
+  status: IStatusComponent
+  storage: IContentStorageComponent
   validator: Validator
+  worldsIndexer: IWorldsIndexer
   worldsManager: IWorldsManager
 }
 

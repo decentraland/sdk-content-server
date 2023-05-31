@@ -45,6 +45,10 @@ describe('comms-adapter', function () {
                 {
                   roomName: 'world-prd-mariano.dcl.eth',
                   count: 2
+                },
+                {
+                  roomName: 'world-prd-an-empty-world.dcl.eth',
+                  count: 0
                 }
               ]
             })
@@ -121,6 +125,10 @@ describe('comms-adapter', function () {
                 {
                   name: 'world-prd-mariano.dcl.eth',
                   num_participants: 2
+                },
+                {
+                  name: 'world-prd-an-empty-world.dcl.eth',
+                  num_participants: 0
                 }
               ]
             })

@@ -15,6 +15,7 @@ import { createWorldsManagerComponent } from '../src/adapters/worlds-manager'
 import { createMockStatusComponent } from './mocks/status-mock'
 import { createInMemoryStorage } from '@dcl/catalyst-storage'
 import { createMockCommsAdapterComponent } from './mocks/comms-adapter-mock'
+import { createWorldsIndexerComponent } from '../src/adapters/worlds-indexer'
 
 /**
  * Behaves like Jest "describe" function, used to describe a test for a
@@ -44,6 +45,11 @@ async function initComponents(): Promise<TestComponents> {
   const commsAdapter = createMockCommsAdapterComponent()
 
   const worldsManager = await createWorldsManagerComponent({ logs, storage })
+  const worldsIndexer = await createWorldsIndexerComponent({
+    logs,
+    storage,
+    worldsManager
+  })
 
   const validator = createValidator({
     config,
@@ -57,15 +63,16 @@ async function initComponents(): Promise<TestComponents> {
 
   return {
     ...components,
-    localFetch: await createLocalFetchCompoment(config),
-    marketplaceSubGraph: createMockMarketplaceSubGraph(),
-    namePermissionChecker: namePermissionChecker,
     commsAdapter,
     fetch,
     limitsManager,
-    validator,
+    localFetch: await createLocalFetchCompoment(config),
+    marketplaceSubGraph: createMockMarketplaceSubGraph(),
+    namePermissionChecker,
     status,
     storage,
+    validator,
+    worldsIndexer,
     worldsManager
   }
 }
