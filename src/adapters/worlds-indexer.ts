@@ -49,7 +49,13 @@ export async function createWorldsIndexerComponent({
   }
 
   async function getIndex(): Promise<WorldsIndex> {
-    const content = await storage.retrieve(GLOBAL_INDEX_FILE)
+    let content
+    try {
+      content = await storage.retrieve(GLOBAL_INDEX_FILE)
+    } catch (e: any) {
+      logger.warn(`Error retrieving index file: ${e.message}`)
+    }
+
     let index: WorldsIndex
 
     if (!content) {
