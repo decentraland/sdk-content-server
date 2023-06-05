@@ -1,5 +1,5 @@
 import { test } from '../components'
-import { ContentClient } from 'dcl-catalyst-client'
+import { createContentClient } from 'dcl-catalyst-client'
 import { EntityType } from '@dcl/schemas'
 import { Authenticator } from '@dcl/crypto'
 import Sinon from 'sinon'
@@ -7,16 +7,16 @@ import { stringToUtf8Bytes } from 'eth-connect'
 import { hashV1 } from '@dcl/hashing'
 import { getIdentity, storeJson } from '../utils'
 import { streamToBuffer } from '@dcl/catalyst-storage/dist/content-item'
+import { buildEntity } from 'dcl-catalyst-client/dist/client/utils/DeploymentBuilder'
 
 test('deployment works', function ({ components, stubComponents }) {
   it('creates an entity and deploys it', async () => {
     const { config, storage } = components
     const { namePermissionChecker, metrics } = stubComponents
 
-    const contentClient = new ContentClient({
-      contentUrl: `http://${await config.requireString('HTTP_SERVER_HOST')}:${await config.requireNumber(
-        'HTTP_SERVER_PORT'
-      )}`
+    const contentClient = createContentClient({
+      url: `http://${await config.requireString('HTTP_SERVER_HOST')}:${await config.requireNumber('HTTP_SERVER_PORT')}`,
+      fetcher: components.fetch
     })
 
     const entityFiles = new Map<string, Uint8Array>()
@@ -26,7 +26,7 @@ test('deployment works', function ({ components, stubComponents }) {
     expect(await storage.exist(fileHash)).toEqual(false)
 
     // Build the entity
-    const { files, entityId } = await contentClient.buildEntity({
+    const { files, entityId } = await buildEntity({
       type: EntityType.SCENE,
       pointers: ['0,0'],
       files: entityFiles,
@@ -55,7 +55,7 @@ test('deployment works', function ({ components, stubComponents }) {
     const authChain = Authenticator.signPayload(identity.authChain, entityId)
 
     // Deploy entity
-    await contentClient.deployEntity({ files, entityId, authChain })
+    await contentClient.deploy({ files, entityId, authChain })
 
     Sinon.assert.calledWith(
       namePermissionChecker.checkPermission,
@@ -75,10 +75,9 @@ test('deployment works when not owner but has permission', function ({ component
     const { config, storage } = components
     const { namePermissionChecker, metrics } = stubComponents
 
-    const contentClient = new ContentClient({
-      contentUrl: `http://${await config.requireString('HTTP_SERVER_HOST')}:${await config.requireNumber(
-        'HTTP_SERVER_PORT'
-      )}`
+    const contentClient = createContentClient({
+      url: `http://${await config.requireString('HTTP_SERVER_HOST')}:${await config.requireNumber('HTTP_SERVER_PORT')}`,
+      fetcher: components.fetch
     })
 
     const delegatedIdentity = await getIdentity()
@@ -102,7 +101,7 @@ test('deployment works when not owner but has permission', function ({ component
     })
 
     // Build the entity
-    const { files, entityId } = await contentClient.buildEntity({
+    const { files, entityId } = await buildEntity({
       type: EntityType.SCENE,
       pointers: ['0,0'],
       files: entityFiles,
@@ -123,7 +122,7 @@ test('deployment works when not owner but has permission', function ({ component
     const authChain = Authenticator.signPayload(delegatedIdentity.authChain, entityId)
 
     // Deploy entity
-    await contentClient.deployEntity({ files, entityId, authChain })
+    await contentClient.deploy({ files, entityId, authChain })
 
     Sinon.assert.calledWith(
       namePermissionChecker.checkPermission,
@@ -153,10 +152,9 @@ test('deployment with failed validation', function ({ components, stubComponents
     const { config, storage } = components
     const { namePermissionChecker, metrics } = stubComponents
 
-    const contentClient = new ContentClient({
-      contentUrl: `http://${await config.requireString('HTTP_SERVER_HOST')}:${await config.requireNumber(
-        'HTTP_SERVER_PORT'
-      )}`
+    const contentClient = createContentClient({
+      url: `http://${await config.requireString('HTTP_SERVER_HOST')}:${await config.requireNumber('HTTP_SERVER_PORT')}`,
+      fetcher: components.fetch
     })
 
     const entityFiles = new Map<string, Uint8Array>()
@@ -166,7 +164,7 @@ test('deployment with failed validation', function ({ components, stubComponents
     expect(await storage.exist(fileHash)).toEqual(false)
 
     // Build the entity
-    const { files, entityId } = await contentClient.buildEntity({
+    const { files, entityId } = await buildEntity({
       type: EntityType.SCENE,
       pointers: ['0,0'],
       files: entityFiles,
@@ -187,7 +185,7 @@ test('deployment with failed validation', function ({ components, stubComponents
     const authChain = Authenticator.signPayload(identity.authChain, entityId)
 
     // Deploy entity
-    await expect(() => contentClient.deployEntity({ files, entityId, authChain })).rejects.toThrow(
+    await expect(() => contentClient.deploy({ files, entityId, authChain })).rejects.toThrow(
       'Your wallet has no permission to publish this scene because it does not have permission to deploy under "just-do-it.dcl.eth". Check scene.json to select a name that either you own or you were given permission to deploy.'
     )
 
@@ -209,10 +207,9 @@ test('deployment with failed validation', function ({ components, stubComponents
     const { config, storage } = components
     const { namePermissionChecker, metrics } = stubComponents
 
-    const contentClient = new ContentClient({
-      contentUrl: `http://${await config.requireString('HTTP_SERVER_HOST')}:${await config.requireNumber(
-        'HTTP_SERVER_PORT'
-      )}`
+    const contentClient = createContentClient({
+      url: `http://${await config.requireString('HTTP_SERVER_HOST')}:${await config.requireNumber('HTTP_SERVER_PORT')}`,
+      fetcher: components.fetch
     })
 
     const entityFiles = new Map<string, Uint8Array>()
@@ -222,7 +219,7 @@ test('deployment with failed validation', function ({ components, stubComponents
     expect(await storage.exist(fileHash)).toEqual(false)
 
     // Build the entity
-    const { files, entityId } = await contentClient.buildEntity({
+    const { files, entityId } = await buildEntity({
       type: EntityType.SCENE,
       pointers: ['0,0'],
       files: entityFiles,
@@ -239,7 +236,7 @@ test('deployment with failed validation', function ({ components, stubComponents
     const authChain = Authenticator.signPayload(identity.authChain, entityId)
 
     // Deploy entity
-    await expect(() => contentClient.deployEntity({ files, entityId, authChain })).rejects.toThrow(
+    await expect(() => contentClient.deploy({ files, entityId, authChain })).rejects.toThrow(
       'Deployment failed: scene.json needs to specify a worldConfiguration section with a valid name inside.'
     )
 

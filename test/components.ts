@@ -16,6 +16,7 @@ import { createMockStatusComponent } from './mocks/status-mock'
 import { createInMemoryStorage } from '@dcl/catalyst-storage'
 import { createMockCommsAdapterComponent } from './mocks/comms-adapter-mock'
 import { createWorldsIndexerComponent } from '../src/adapters/worlds-indexer'
+import * as nodeFetch from 'node-fetch'
 
 /**
  * Behaves like Jest "describe" function, used to describe a test for a
@@ -38,7 +39,18 @@ async function initComponents(): Promise<TestComponents> {
 
   const namePermissionChecker = createMockNamePermissionChecker()
 
-  const fetch = await createFetchComponent()
+  const fetch = {
+    async fetch(url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit): Promise<nodeFetch.Response> {
+      return nodeFetch.default(url, init).then(async (response: nodeFetch.Response) => {
+        if (response.ok) {
+          // response.status >= 200 && response.status < 300
+          return response
+        }
+
+        throw new Error(await response.text())
+      })
+    }
+  }
 
   const limitsManager = createMockLimitsManagerComponent()
 
