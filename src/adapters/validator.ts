@@ -14,6 +14,11 @@ const createValidationResult = (errors: string[]) => {
 
 const OK = createValidationResult([])
 
+function getWorldNameFromEntity(sceneJson: any): string {
+  // At this stage, we know that either dreamSpaceConfiguration or worldConfiguration is present and has a name
+  return (sceneJson.metadata.dreamSpaceConfiguration?.name || sceneJson.metadata.worldConfiguration?.name)!
+}
+
 export const validateEntity: Validation = async (
   components: Partial<ValidatorComponents>,
   deployment: DeploymentToValidate
@@ -28,9 +33,18 @@ export const validateEntity: Validation = async (
     ])
   }
 
-  if (!deployment.entity.metadata.worldConfiguration?.name) {
+  if (deployment.entity.metadata.dreamSpaceConfiguration && deployment.entity.metadata.worldConfiguration) {
     return createValidationResult([
-      'scene.json needs to specify a worldConfiguration section with a valid name inside.'
+      '`dreamSpaceConfiguration` and `worldConfiguration` can not both be present in scene.json at the same time. Prefer using `dreamSpaceConfiguration`.'
+    ])
+  }
+
+  if (
+    !deployment.entity.metadata.worldConfiguration?.name &&
+    !deployment.entity.metadata.dreamSpaceConfiguration?.name
+  ) {
+    return createValidationResult([
+      'scene.json needs to specify a `dreamSpaceConfiguration` section with a valid name inside.'
     ])
   }
   return OK
@@ -104,7 +118,7 @@ export const validateDeploymentPermission: Validation = async (
   deployment: DeploymentToValidate
 ): Promise<ValidationResult> => {
   const sceneJson = JSON.parse(deployment.files.get(deployment.entity.id)!.toString())
-  const worldSpecifiedName = sceneJson.metadata.worldConfiguration.name
+  const worldSpecifiedName = getWorldNameFromEntity(sceneJson)
   const signer = deployment.authChain[0].payload
 
   const allowed = await allowedByAcl(components, worldSpecifiedName, signer)
@@ -122,7 +136,7 @@ export const validateSceneDimensions: Validation = async (
   deployment: DeploymentToValidate
 ): Promise<ValidationResult> => {
   const sceneJson = JSON.parse(deployment.files.get(deployment.entity.id)!.toString())
-  const worldName = sceneJson.metadata.worldConfiguration.name
+  const worldName = getWorldNameFromEntity(sceneJson)
 
   const maxParcels = await components.limitsManager.getMaxAllowedParcelsFor(worldName || '')
   if (deployment.entity.pointers.length > maxParcels) {
@@ -194,7 +208,7 @@ export const validateSize: Validation = async (
   }
 
   const sceneJson = JSON.parse(deployment.files.get(deployment.entity.id)!.toString())
-  const worldName = sceneJson.metadata.worldConfiguration.name
+  const worldName = getWorldNameFromEntity(sceneJson)
   const maxTotalSizeInMB = await components.limitsManager.getMaxAllowedSizeInMbFor(worldName || '')
 
   const errors: string[] = []
@@ -219,7 +233,7 @@ export const validateSdkVersion: Validation = async (
   deployment: DeploymentToValidate
 ): Promise<ValidationResult> => {
   const sceneJson = JSON.parse(deployment.files.get(deployment.entity.id)!.toString())
-  const worldName = sceneJson.metadata.worldConfiguration.name
+  const worldName = getWorldNameFromEntity(sceneJson)
   const allowSdk6 = await components.limitsManager.getAllowSdk6For(worldName || '')
 
   const sdkVersion = deployment.entity.metadata.runtimeVersion
@@ -241,6 +255,8 @@ export const validateMiniMapImages: Validation = async (
   const errors: string[] = []
 
   for (const imageFile of [
+    sceneJson.metadata.dreamSpaceConfiguration?.miniMapConfig?.dataImage,
+    sceneJson.metadata.dreamSpaceConfiguration?.miniMapConfig?.estateImage,
     sceneJson.metadata.worldConfiguration?.miniMapConfig?.dataImage,
     sceneJson.metadata.worldConfiguration?.miniMapConfig?.estateImage
   ]) {
@@ -278,7 +294,11 @@ export const validateSkyboxTextures: Validation = async (
 
   const errors: string[] = []
 
-  for (const textureFile of sceneJson.metadata.worldConfiguration?.skyboxConfig?.textures || []) {
+  const textures =
+    sceneJson.metadata.dreamSpaceConfiguration?.skyboxConfig?.textures ||
+    sceneJson.metadata.worldConfiguration?.skyboxConfig?.textures ||
+    []
+  for (const textureFile of textures) {
     if (textureFile) {
       const isFilePresent = sceneJson.content.some((content: ContentMapping) => content.file === textureFile)
       if (!isFilePresent) {
