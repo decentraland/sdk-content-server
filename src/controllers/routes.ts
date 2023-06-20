@@ -15,9 +15,7 @@ import { getLiveDataHandler } from './handlers/live-data-handler'
 export async function setupRouter(_globalContext: GlobalContext): Promise<Router<GlobalContext>> {
   const router = new Router<GlobalContext>()
 
-  // TODO deprecate this one in favor of the non-prefixed one
   router.get('/world/:world_name/about', worldAboutHandler)
-  router.get('/:world_name/about', worldAboutHandler)
 
   // creation
   router.post('/entities', multipartParserWrapper(deployEntity))
