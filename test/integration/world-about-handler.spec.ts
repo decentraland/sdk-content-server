@@ -2,9 +2,9 @@ import { test } from '../components'
 import { getIdentity, storeJson } from '../utils'
 import { Authenticator } from '@dcl/crypto'
 
-const ENS = 'some-name.dcl.eth'
-const STORED_ENTITY = { metadata: { dreamSpaceConfiguration: { name: ENS } } }
+const STORED_ENTITY = { metadata: {} }
 const ENTITY_CID = 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y'
+const ENS = 'some-name.dcl.eth'
 
 test('world about handler /world/:world_name/about', function ({ components }) {
   it('when world is not yet deployed it responds 404', async () => {
@@ -94,7 +94,7 @@ test('world about handler /world/:world_name/about', function ({ components }) {
 
     await storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', {
       metadata: {
-        dreamSpaceConfiguration: {
+        worldConfiguration: {
           miniMapConfig: { visible: true }
         }
       }
@@ -113,7 +113,7 @@ test('world about handler /world/:world_name/about', function ({ components }) {
 
     await storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', {
       metadata: {
-        dreamSpaceConfiguration: {
+        worldConfiguration: {
           minimapVisible: false,
           miniMapConfig: {
             dataImage: 'black_image.png',
@@ -148,7 +148,7 @@ test('world about handler /world/:world_name/about', function ({ components }) {
 
     await storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', {
       metadata: {
-        dreamSpaceConfiguration: {
+        worldConfiguration: {
           name: 'some-name.dcl.eth',
           skyboxConfig: {
             textures: ['black_image.png']
@@ -184,7 +184,7 @@ test('world about handler /world/:world_name/about', function ({ components }) {
 
     await storeJson(storage, 'bafybeictjyqjlkgybfckczpuqlqo7xfhho3jpnep4wesw3ivaeeuqugc2y', {
       metadata: {
-        dreamSpaceConfiguration: {
+        worldConfiguration: {
           fixedAdapter: 'offline:offline'
         }
       }

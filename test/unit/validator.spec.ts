@@ -116,25 +116,6 @@ describe('validator', function () {
     )
   })
 
-  it('validateEntity with both worldConfiguration and dreamSpaceConfiguration', async () => {
-    const deployment = await createDeployment(identity.authChain, {
-      type: EntityType.SCENE,
-      pointers: ['0,0'],
-      timestamp: Date.parse('2022-11-01T00:00:00Z'),
-      metadata: {
-        worldConfiguration: { name: 'whatever.dcl.eth' },
-        dreamSpaceConfiguration: { name: 'whatever.dcl.eth' }
-      },
-      files: []
-    })
-
-    const result = await validateEntity(components, deployment)
-    expect(result.ok()).toBeFalsy()
-    expect(result.errors).toContain(
-      '`dreamSpaceConfiguration` and `worldConfiguration` can not both be present in scene.json at the same time. Prefer using `dreamSpaceConfiguration`.'
-    )
-  })
-
   it('validateEntityId with entity id', async () => {
     const deployment = await createDeployment(identity.authChain)
 
@@ -152,7 +133,7 @@ describe('validator', function () {
       type: EntityType.SCENE,
       pointers: ['0,0'],
       timestamp: Date.parse('2022-11-01T00:00:00Z'),
-      metadata: { dreamSpaceConfiguration: { name: 'whatever.dcl.eth' } },
+      metadata: { worldConfiguration: { name: 'whatever.dcl.eth' } },
       files: []
     })
 
@@ -203,7 +184,7 @@ describe('validator', function () {
       pointers: ['0,0'],
       timestamp: Date.now(),
       metadata: {
-        dreamSpaceConfiguration: {
+        worldConfiguration: {
           name: 'different.dcl.eth'
         }
       },
@@ -223,7 +204,7 @@ describe('validator', function () {
       pointers: ['0,0', '0,1', '1,0', '1,1', '1,2'],
       timestamp: Date.now(),
       metadata: {
-        dreamSpaceConfiguration: {
+        worldConfiguration: {
           name: 'whatever.dcl.eth'
         }
       },
@@ -278,7 +259,7 @@ describe('validator', function () {
       pointers: ['0,0'],
       timestamp: Date.now(),
       metadata: {
-        dreamSpaceConfiguration: {
+        worldConfiguration: {
           name: 'whatever.dcl.eth'
         }
       },
@@ -303,7 +284,7 @@ describe('validator', function () {
       timestamp: Date.now(),
       metadata: {
         runtimeVersion: '6',
-        dreamSpaceConfiguration: {
+        worldConfiguration: {
           name: 'whatever.dcl.eth'
         }
       },
@@ -327,7 +308,7 @@ describe('validator', function () {
       timestamp: Date.now(),
       metadata: {
         runtimeVersion: '7',
-        dreamSpaceConfiguration: {
+        worldConfiguration: {
           name: 'whatever.dcl.eth',
           miniMapConfig: {
             dataImage: 'abc.png',
@@ -349,7 +330,7 @@ describe('validator', function () {
       timestamp: Date.now(),
       metadata: {
         runtimeVersion: '7',
-        dreamSpaceConfiguration: {
+        worldConfiguration: {
           name: 'whatever.dcl.eth',
           skyboxConfig: {
             textures: ['xyz.png']
@@ -408,7 +389,7 @@ async function createDeployment(identityAuthChain: AuthIdentity, entity?: any) {
     timestamp: Date.now(),
     metadata: {
       runtimeVersion: '7',
-      dreamSpaceConfiguration: { name: 'whatever.dcl.eth' },
+      worldConfiguration: { name: 'whatever.dcl.eth' },
       display: {
         navmapThumbnail: 'abc.txt'
       }

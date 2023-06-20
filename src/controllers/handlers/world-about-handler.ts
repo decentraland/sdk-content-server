@@ -55,29 +55,30 @@ export async function worldAboutHandler({
     return defaultImage
   }
 
-  const dreamSpaceConfiguration = sceneJson.metadata.dreamSpaceConfiguration || sceneJson.metadata.worldConfiguration
-
   const minimap: AboutResponse_MinimapConfiguration = {
     enabled:
-      sceneJson.metadata.worldConfiguration?.minimapVisible || dreamSpaceConfiguration.miniMapConfig?.visible || false
+      sceneJson.metadata.worldConfiguration?.minimapVisible ||
+      sceneJson.metadata.worldConfiguration?.miniMapConfig?.visible ||
+      false
   }
-  if (minimap.enabled || dreamSpaceConfiguration.miniMapConfig?.dataImage) {
+  if (minimap.enabled || sceneJson.metadata.worldConfiguration?.miniMapConfig?.dataImage) {
     minimap.dataImage = urlForFile(
-      dreamSpaceConfiguration.miniMapConfig?.dataImage,
+      sceneJson.metadata.worldConfiguration?.miniMapConfig?.dataImage,
       'https://api.decentraland.org/v1/minimap.png'
     )
   }
-  if (minimap.enabled || dreamSpaceConfiguration.miniMapConfig?.estateImage) {
+  if (minimap.enabled || sceneJson.metadata.worldConfiguration?.miniMapConfig?.estateImage) {
     minimap.estateImage = urlForFile(
-      dreamSpaceConfiguration.miniMapConfig?.estateImage,
+      sceneJson.metadata.worldConfiguration?.miniMapConfig?.estateImage,
       'https://api.decentraland.org/v1/estatemap.png'
     )
   }
 
   const skybox: AboutResponse_SkyboxConfiguration = {
-    fixedHour: dreamSpaceConfiguration.skyboxConfig?.fixedHour || sceneJson.metadata.worldConfiguration?.skybox,
-    textures: dreamSpaceConfiguration.skyboxConfig?.textures
-      ? dreamSpaceConfiguration.skyboxConfig?.textures.map((texture: string) => urlForFile(texture))
+    fixedHour:
+      sceneJson.metadata.worldConfiguration?.skyboxConfig?.fixedHour || sceneJson.metadata.worldConfiguration?.skybox,
+    textures: sceneJson.metadata.worldConfiguration?.skyboxConfig?.textures
+      ? sceneJson.metadata.worldConfiguration?.skyboxConfig?.textures.map((texture: string) => urlForFile(texture))
       : undefined
   }
 
@@ -115,9 +116,7 @@ export async function worldAboutHandler({
 }
 
 async function resolveFixedAdapter(worldName: string, sceneJson: any, baseUrl: string, roomPrefix: string) {
-  const fixedAdapter =
-    sceneJson.metadata.dreamSpaceConfiguration?.fixedAdapter || sceneJson.metadata.worldConfiguration?.fixedAdapter
-  if (fixedAdapter === 'offline:offline') {
+  if (sceneJson.metadata.worldConfiguration?.fixedAdapter === 'offline:offline') {
     return 'offline:offline'
   }
 
