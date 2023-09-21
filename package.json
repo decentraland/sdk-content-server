@@ -18,7 +18,7 @@
     "@dcl/catalyst-storage": "^1.0.4",
     "@dcl/content-validator": "^4.0.17",
     "@dcl/crypto": "^3.2.2",
-    "@dcl/hashing": "^1.1.1",
+    "@dcl/hashing": "^3.0.4",
     "@dcl/schemas": "^6.12.0",
     "@types/busboy": "^1.5.0",
     "@well-known-components/env-config-provider": "^1.1.1",
