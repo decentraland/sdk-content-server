@@ -1,6 +1,6 @@
 ARG RUN
 
-FROM node:lts as builderenv
+FROM node:24@sha256:032e78d7e54e352129831743737e3a83171d9cc5b5896f411649c597ce0b11ea as builderenv
 
 WORKDIR /app
 
@@ -28,7 +28,7 @@ RUN npm ci --only=production
 
 ########################## END OF BUILD STAGE ##########################
 
-FROM node:lts
+FROM node:24@sha256:032e78d7e54e352129831743737e3a83171d9cc5b5896f411649c597ce0b11ea
 
 # NODE_ENV is used to configure some runtime options, like JSON logger
 ENV NODE_ENV production
